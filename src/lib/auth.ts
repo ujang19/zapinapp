@@ -213,7 +213,7 @@ export class AuthClient {
    * Login user
    */
   static async login(email: string, password: string): Promise<AuthUser> {
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -224,17 +224,30 @@ export class AuthClient {
     const data = await response.json();
 
     if (!response.ok || !data.success) {
-      throw new Error(data.error?.message || 'Login failed');
+      throw new Error(data.error || 'Login failed');
     }
 
-    // Store auth data
-    this.setAuth(data.data.user, {
-      token: data.data.token,
-      refreshToken: data.data.refreshToken,
-      expiresAt: new Date(data.data.expiresAt)
-    });
+    // Ensure user data has the expected structure
+    const user: AuthUser = {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.name,
+      role: data.user.role,
+      avatar: data.user.avatar || null,
+      tenant: {
+        id: data.user.tenant.id,
+        name: data.user.tenant.name,
+        slug: data.user.tenant.slug,
+        plan: data.user.tenant.plan || 'FREE',
+        status: data.user.tenant.status || 'ACTIVE'
+      }
+    };
 
-    return data.data.user;
+    // Store auth data
+    localStorage.setItem(this.TOKEN_KEY, data.token);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+
+    return user;
   }
 
   /**
@@ -275,24 +288,17 @@ export class AuthClient {
    * Logout user
    */
   static async logout(): Promise<void> {
-    const token = this.getToken();
-    const refreshToken = this.getRefreshToken();
-
     // Clear local storage first
     this.clearAuth();
 
     // Try to logout on server (don't throw if it fails)
     try {
-      if (token) {
-        await fetch(`${API_URL}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ refreshToken })
-        });
-      }
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
     } catch {
       // Ignore server logout errors
     }

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth, useFormValidation } from '../../hooks/useAuth';
 import { Button } from '../ui/button';
@@ -13,6 +13,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, loading } = useAuth();
   const { errors, validateField, clearErrors, hasErrors } = useFormValidation();
   
@@ -22,6 +23,15 @@ export function LoginForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [redirectTo, setRedirectTo] = useState('/dashboard');
+
+  // Get redirect parameter from URL
+  useEffect(() => {
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      setRedirectTo(decodeURIComponent(redirect));
+    }
+  }, [searchParams]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -50,7 +60,7 @@ export function LoginForm() {
 
     try {
       await login(formData.email, formData.password);
-      router.push('/dashboard');
+      router.push(redirectTo);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Login failed');
     }

@@ -9,14 +9,6 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/v1/:path*',
-        destination: 'http://localhost:3001/v1/:path*',
-      },
-    ];
-  },
   async headers() {
     return [
       {
