@@ -1,0 +1,422 @@
+import { Server as SocketIOServer } from 'socket.io';
+import { Server as HTTPServer } from 'http';
+import { redis } from '../lib/redis';
+import { prisma } from '../lib/prisma';
+import jwt from 'jsonwebtoken';
+import { JWTPayload } from '../types';
+
+export interface WebSocketUser {
+  id: string;
+  tenantId: string;
+  role: string;
+  socketId: string;
+}
+
+export class WebSocketService {
+  private io: SocketIOServer;
+  private connectedUsers: Map<string, WebSocketUser> = new Map();
+  private tenantRooms: Map<string, Set<string>> = new Map();
+
+  constructor(server: HTTPServer) {
+    this.io = new SocketIOServer(server, {
+      cors: {
+        origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+        credentials: true
+      },
+      path: '/socket.io'
+    });
+
+    this.setupEventHandlers();
+    this.setupRedisSubscriptions();
+  }
+
+  /**
+   * Setup Socket.IO event handlers
+   */
+  private setupEventHandlers(): void {
+    this.io.use(async (socket, next) => {
+      try {
+        const token = socket.handshake.auth.token;
+        if (!token) {
+          return next(new Error('Authentication token required'));
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.userId },
+          include: { tenant: true }
+        });
+
+        if (!user || !user.isActive || !user.tenant || user.tenant.status !== 'ACTIVE') {
+          return next(new Error('Invalid user or tenant'));
+        }
+
+        (socket as any).user = {
+          id: user.id,
+          tenantId: user.tenantId,
+          role: user.role,
+          socketId: socket.id
+        };
+
+        next();
+      } catch (error) {
+        next(new Error('Authentication failed'));
+      }
+    });
+
+    this.io.on('connection', (socket) => {
+      const user = (socket as any).user as WebSocketUser;
+      
+      // Store connected user
+      this.connectedUsers.set(socket.id, user);
+      
+      // Join tenant room
+      socket.join(`tenant:${user.tenantId}`);
+      this.addToTenantRoom(user.tenantId, socket.id);
+
+      // Join user-specific room
+      socket.join(`user:${user.id}`);
+
+      console.log(`User ${user.id} connected to WebSocket (tenant: ${user.tenantId})`);
+
+      // Handle instance subscription
+      socket.on('subscribe:instance', (instanceId: string) => {
+        this.handleInstanceSubscription(socket, user, instanceId);
+      });
+
+      // Handle bot subscription
+      socket.on('subscribe:bot', (botId: string) => {
+        this.handleBotSubscription(socket, user, botId);
+      });
+
+      // Handle dashboard subscription
+      socket.on('subscribe:dashboard', () => {
+        socket.join(`dashboard:${user.tenantId}`);
+      });
+
+      // Handle webhook events subscription
+      socket.on('subscribe:webhooks', () => {
+        socket.join(`webhooks:${user.tenantId}`);
+      });
+
+      // Handle disconnection
+      socket.on('disconnect', () => {
+        this.handleDisconnection(socket, user);
+      });
+
+      // Send initial connection confirmation
+      socket.emit('connected', {
+        userId: user.id,
+        tenantId: user.tenantId,
+        timestamp: new Date().toISOString()
+      });
+    });
+  }
+
+  /**
+   * Setup Redis subscriptions for real-time events
+   */
+  private setupRedisSubscriptions(): void {
+    // Subscribe to tenant-specific events
+    const subscriber = redis.duplicate();
+    
+    // Message events
+    subscriber.psubscribe('tenant:*:messages');
+    subscriber.psubscribe('global:messages');
+    
+    // Connection events
+    subscriber.psubscribe('tenant:*:connections');
+    subscriber.psubscribe('global:connections');
+    subscriber.psubscribe('instance:*:status');
+    
+    // Bot events
+    subscriber.psubscribe('tenant:*:bots');
+    subscriber.psubscribe('global:bots');
+    subscriber.psubscribe('bot:*:events');
+    
+    // Webhook events
+    subscriber.psubscribe('tenant:*:events');
+    subscriber.psubscribe('global:webhook:events');
+
+    subscriber.on('pmessage', (pattern, channel, message) => {
+      this.handleRedisMessage(pattern, channel, message);
+    });
+  }
+
+  /**
+   * Handle Redis messages and broadcast to appropriate clients
+   */
+  private handleRedisMessage(pattern: string, channel: string, message: string): void {
+    try {
+      const data = JSON.parse(message);
+      
+      // Extract tenant ID from channel or data
+      const tenantId = this.extractTenantId(channel, data);
+      
+      if (pattern.includes('tenant:*:messages')) {
+        this.broadcastToTenant(tenantId, 'message:update', data);
+      } else if (pattern.includes('tenant:*:connections')) {
+        this.broadcastToTenant(tenantId, 'connection:update', data);
+      } else if (pattern.includes('instance:*:status')) {
+        this.broadcastInstanceUpdate(data);
+      } else if (pattern.includes('tenant:*:bots')) {
+        this.broadcastToTenant(tenantId, 'bot:update', data);
+      } else if (pattern.includes('tenant:*:events')) {
+        this.broadcastToTenant(tenantId, 'webhook:event', data);
+      } else if (pattern.includes('global:')) {
+        this.broadcastGlobalUpdate(pattern, data);
+      }
+    } catch (error) {
+      console.error('Error handling Redis message:', error);
+    }
+  }
+
+  /**
+   * Handle instance subscription
+   */
+  private async handleInstanceSubscription(
+    socket: any,
+    user: WebSocketUser,
+    instanceId: string
+  ): Promise<void> {
+    try {
+      // Verify user has access to this instance
+      const instance = await prisma.instance.findFirst({
+        where: {
+          id: instanceId,
+          tenantId: user.tenantId
+        }
+      });
+
+      if (!instance) {
+        socket.emit('error', { message: 'Instance not found or access denied' });
+        return;
+      }
+
+      // Join instance-specific room
+      socket.join(`instance:${instanceId}`);
+      
+      // Send current instance status
+      socket.emit('instance:status', {
+        instanceId,
+        status: instance.status,
+        lastConnectedAt: instance.lastConnectedAt,
+        qrCode: instance.qrCode
+      });
+
+    } catch (error) {
+      socket.emit('error', { message: 'Failed to subscribe to instance' });
+    }
+  }
+
+  /**
+   * Handle bot subscription
+   */
+  private async handleBotSubscription(
+    socket: any,
+    user: WebSocketUser,
+    botId: string
+  ): Promise<void> {
+    try {
+      // Verify user has access to this bot
+      const bot = await prisma.bot.findFirst({
+        where: {
+          id: botId,
+          tenantId: user.tenantId
+        },
+        include: {
+          sessions: {
+            where: { status: 'ACTIVE' },
+            take: 10,
+            orderBy: { startedAt: 'desc' }
+          }
+        }
+      });
+
+      if (!bot) {
+        socket.emit('error', { message: 'Bot not found or access denied' });
+        return;
+      }
+
+      // Join bot-specific room
+      socket.join(`bot:${botId}`);
+      
+      // Send current bot status
+      socket.emit('bot:status', {
+        botId,
+        isActive: bot.isActive,
+        activeSessions: bot.sessions.length,
+        sessions: bot.sessions
+      });
+
+    } catch (error) {
+      socket.emit('error', { message: 'Failed to subscribe to bot' });
+    }
+  }
+
+  /**
+   * Handle client disconnection
+   */
+  private handleDisconnection(socket: any, user: WebSocketUser): void {
+    // Remove from connected users
+    this.connectedUsers.delete(socket.id);
+    
+    // Remove from tenant room
+    this.removeFromTenantRoom(user.tenantId, socket.id);
+    
+    console.log(`User ${user.id} disconnected from WebSocket`);
+  }
+
+  /**
+   * Broadcast message to all clients in a tenant
+   */
+  private broadcastToTenant(tenantId: string, event: string, data: any): void {
+    this.io.to(`tenant:${tenantId}`).emit(event, data);
+  }
+
+  /**
+   * Broadcast instance-specific updates
+   */
+  private broadcastInstanceUpdate(data: any): void {
+    if (data.instanceId) {
+      this.io.to(`instance:${data.instanceId}`).emit('instance:update', data);
+    }
+    
+    // Also broadcast to tenant room
+    if (data.tenantId) {
+      this.broadcastToTenant(data.tenantId, 'instance:update', data);
+    }
+  }
+
+  /**
+   * Broadcast global updates (for admin dashboard)
+   */
+  private broadcastGlobalUpdate(pattern: string, data: any): void {
+    let event = 'global:update';
+    
+    if (pattern.includes('messages')) {
+      event = 'global:message';
+    } else if (pattern.includes('connections')) {
+      event = 'global:connection';
+    } else if (pattern.includes('bots')) {
+      event = 'global:bot';
+    } else if (pattern.includes('webhook')) {
+      event = 'global:webhook';
+    }
+    
+    // Broadcast to admin users only
+    this.broadcastToAdmins(event, data);
+  }
+
+  /**
+   * Broadcast to admin users
+   */
+  private broadcastToAdmins(event: string, data: any): void {
+    this.connectedUsers.forEach((user, socketId) => {
+      if (user.role === 'ADMIN') {
+        this.io.to(socketId).emit(event, data);
+      }
+    });
+  }
+
+  /**
+   * Extract tenant ID from channel or data
+   */
+  private extractTenantId(channel: string, data: any): string {
+    // Try to extract from channel name first
+    const channelMatch = channel.match(/tenant:([^:]+):/);
+    if (channelMatch) {
+      return channelMatch[1];
+    }
+    
+    // Fallback to data
+    return data.tenantId || 'unknown';
+  }
+
+  /**
+   * Add socket to tenant room tracking
+   */
+  private addToTenantRoom(tenantId: string, socketId: string): void {
+    if (!this.tenantRooms.has(tenantId)) {
+      this.tenantRooms.set(tenantId, new Set());
+    }
+    this.tenantRooms.get(tenantId)!.add(socketId);
+  }
+
+  /**
+   * Remove socket from tenant room tracking
+   */
+  private removeFromTenantRoom(tenantId: string, socketId: string): void {
+    const room = this.tenantRooms.get(tenantId);
+    if (room) {
+      room.delete(socketId);
+      if (room.size === 0) {
+        this.tenantRooms.delete(tenantId);
+      }
+    }
+  }
+
+  /**
+   * Get connected users count for tenant
+   */
+  public getConnectedUsersCount(tenantId: string): number {
+    return this.tenantRooms.get(tenantId)?.size || 0;
+  }
+
+  /**
+   * Get all connected users
+   */
+  public getConnectedUsers(): WebSocketUser[] {
+    return Array.from(this.connectedUsers.values());
+  }
+
+  /**
+   * Send message to specific user
+   */
+  public sendToUser(userId: string, event: string, data: any): void {
+    this.io.to(`user:${userId}`).emit(event, data);
+  }
+
+  /**
+   * Send message to specific tenant
+   */
+  public sendToTenant(tenantId: string, event: string, data: any): void {
+    this.broadcastToTenant(tenantId, event, data);
+  }
+
+  /**
+   * Send notification to tenant users
+   */
+  public sendNotification(tenantId: string, notification: {
+    type: 'info' | 'success' | 'warning' | 'error';
+    title: string;
+    message: string;
+    data?: any;
+  }): void {
+    this.broadcastToTenant(tenantId, 'notification', {
+      ...notification,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Get WebSocket server instance
+   */
+  public getIO(): SocketIOServer {
+    return this.io;
+  }
+}
+
+// Export singleton instance (will be initialized in main server)
+let websocketService: WebSocketService | null = null;
+
+export function initializeWebSocketService(server: HTTPServer): WebSocketService {
+  if (!websocketService) {
+    websocketService = new WebSocketService(server);
+  }
+  return websocketService;
+}
+
+export function getWebSocketService(): WebSocketService | null {
+  return websocketService;
+}

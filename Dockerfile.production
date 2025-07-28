@@ -1,0 +1,153 @@
+# Multi-stage production-optimized Dockerfile for Zapin WhatsApp SaaS Platform
+# This Dockerfile is optimized for production deployment with security hardening
+
+# Stage 1: Base image with security updates
+FROM node:18-alpine AS base
+
+# Install security updates and required packages
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    dumb-init \
+    curl \
+    ca-certificates \
+    tzdata && \
+    rm -rf /var/cache/apk/*
+
+# Create non-root user early
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs --ingroup nodejs
+
+# Stage 2: Dependencies installation
+FROM base AS deps
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
+
+# Install dependencies based on lock file
+RUN \
+  if [ -f pnpm-lock.yaml ]; then \
+    corepack enable pnpm && pnpm install --frozen-lockfile --prod; \
+  elif [ -f package-lock.json ]; then \
+    npm ci --only=production --no-audit --no-fund; \
+  else \
+    npm install --only=production --no-audit --no-fund; \
+  fi
+
+# Stage 3: Build stage
+FROM base AS builder
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
+COPY . .
+
+# Install all dependencies for build (including dev dependencies)
+RUN \
+  if [ -f pnpm-lock.yaml ]; then \
+    corepack enable pnpm && pnpm install --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then \
+    npm ci --no-audit --no-fund; \
+  else \
+    npm install --no-audit --no-fund; \
+  fi
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build applications
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# Build Next.js application
+RUN npm run build:next
+
+# Build API application
+RUN npm run build:api
+
+# Stage 4: Production runtime
+FROM base AS runner
+
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV API_PORT=3001
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/logs /app/uploads /app/temp && \
+    chown -R nextjs:nodejs /app
+
+# Copy production dependencies
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Copy built applications
+COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Copy Prisma files
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copy package.json for runtime
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
+# Copy startup script
+COPY --chown=nextjs:nodejs <<EOF /app/start.sh
+#!/bin/sh
+set -e
+
+# Wait for database to be ready
+echo "Waiting for database connection..."
+until nc -z \${DATABASE_HOST:-postgres} \${DATABASE_PORT:-5432}; do
+  echo "Database is unavailable - sleeping"
+  sleep 2
+done
+echo "Database is up - executing command"
+
+# Run database migrations
+echo "Running database migrations..."
+npx prisma migrate deploy
+
+# Start applications
+echo "Starting applications..."
+exec dumb-init node dist/api/index.js &
+exec dumb-init node server.js
+EOF
+
+RUN chmod +x /app/start.sh
+
+# Switch to non-root user
+USER nextjs
+
+# Expose ports
+EXPOSE 3000 3001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["/app/start.sh"]
+
+# Security labels
+LABEL \
+  org.opencontainers.image.title="Zapin WhatsApp SaaS Platform" \
+  org.opencontainers.image.description="Production-ready WhatsApp SaaS platform" \
+  org.opencontainers.image.vendor="Zapin Team" \
+  org.opencontainers.image.version="1.0.0" \
+  org.opencontainers.image.created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+  security.non-root="true" \
+  security.hardened="true"

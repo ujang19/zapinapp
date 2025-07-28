@@ -1,0 +1,328 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User and Tenant Management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  avatar    String?
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  sessions    Session[]
+  apiKeys     ApiKey[]
+  auditLogs   AuditLog[]
+
+  @@map("users")
+}
+
+model Tenant {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  domain      String?    @unique
+  plan        PlanType   @default(BASIC)
+  status      TenantStatus @default(ACTIVE)
+  settings    Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  users       User[]
+  instances   Instance[]
+  bots        Bot[]
+  apiKeys     ApiKey[]
+  quotaUsage  QuotaUsage[]
+  messageLogs MessageLog[]
+  auditLogs   AuditLog[]
+  billing     Billing[]
+
+  @@map("tenants")
+}
+
+// Authentication
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique
+  scopes      String[] // e.g., ["messages:send", "instances:read"]
+  isActive    Boolean  @default(true)
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+
+  @@map("api_keys")
+}
+
+// WhatsApp Instance Management
+model Instance {
+  id                    String        @id @default(cuid())
+  name                  String
+  evolutionKey          String        @unique
+  evolutionInstanceId   String        @unique
+  phoneNumber           String?
+  status                InstanceStatus @default(CREATED)
+  qrCode                String?
+  settings              Json?
+  webhookUrl            String?
+  isActive              Boolean       @default(true)
+  lastConnectedAt       DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  // Relations
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  bots        Bot[]
+  messageLogs MessageLog[]
+
+  @@map("instances")
+}
+
+// Bot Management
+model Bot {
+  id              String    @id @default(cuid())
+  name            String
+  type            BotType
+  evolutionBotId  String?   @unique
+  config          Json
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId   String
+  instance   Instance     @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  instanceId String
+  sessions   BotSession[]
+
+  @@map("bots")
+}
+
+model BotSession {
+  id          String    @id @default(cuid())
+  sessionId   String    @unique
+  phoneNumber String
+  status      SessionStatus @default(ACTIVE)
+  context     Json?
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  bot      Bot            @relation(fields: [botId], references: [id], onDelete: Cascade)
+  botId    String
+  messages BotMessage[]
+
+  @@map("bot_sessions")
+}
+
+model BotMessage {
+  id        String   @id @default(cuid())
+  messageId String
+  content   String
+  type      MessageType
+  direction MessageDirection
+  createdAt DateTime @default(now())
+
+  // Relations
+  session   BotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+
+  @@map("bot_messages")
+}
+
+// Quota and Usage Management
+model QuotaUsage {
+  id           String    @id @default(cuid())
+  quotaType    QuotaType
+  period       String    // e.g., "2024-01", "2024-01-15", "2024-01-15-14"
+  used         Int       @default(0)
+  limit        Int
+  resetAt      DateTime
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  @@unique([tenantId, quotaType, period])
+  @@map("quota_usage")
+}
+
+// Message Logging
+model MessageLog {
+  id          String      @id @default(cuid())
+  messageId   String?
+  endpoint    String
+  method      String
+  status      MessageStatus
+  phoneNumber String?
+  content     String?
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+
+  // Relations
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId   String
+  instance   Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  instanceId String
+
+  @@map("message_logs")
+}
+
+// Billing
+model Billing {
+  id            String      @id @default(cuid())
+  period        String      // e.g., "2024-01"
+  plan          PlanType
+  baseAmount    Decimal     @db.Decimal(10, 2)
+  usageAmount   Decimal     @db.Decimal(10, 2)
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  status        BillingStatus @default(PENDING)
+  paidAt        DateTime?
+  dueAt         DateTime
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  @@unique([tenantId, period])
+  @@map("billing")
+}
+
+// Audit Logging
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  resource  String
+  resourceId String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+
+  @@map("audit_logs")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum PlanType {
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum InstanceStatus {
+  CREATED
+  CONNECTING
+  CONNECTED
+  DISCONNECTED
+  ERROR
+}
+
+enum BotType {
+  TYPEBOT
+  OPENAI
+}
+
+enum SessionStatus {
+  ACTIVE
+  ENDED
+  EXPIRED
+}
+
+enum MessageType {
+  TEXT
+  MEDIA
+  AUDIO
+  DOCUMENT
+  LOCATION
+  CONTACT
+  STICKER
+  REACTION
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum QuotaType {
+  MESSAGES_HOURLY
+  MESSAGES_DAILY
+  MESSAGES_MONTHLY
+  INSTANCES
+  BOTS
+  API_CALLS
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum BillingStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
