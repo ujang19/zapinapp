@@ -185,4 +185,4 @@ storybook-static/
 .env.production
 
 # Generated files
-src/types/generated/
+src/types/generated/context7/
