@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AuthProvider, useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/button';
 import { 
   LayoutDashboard, 
@@ -123,15 +123,18 @@ function DashboardHeader({ onMenuClick }: { onMenuClick: () => void }) {
 }
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    if (!loading && !isAuthenticated) {
+      const currentPath = window.location.pathname;
+      // Use window.location for hard navigation
+      window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+      return;
     }
-  }, [user, loading, router]);
+  }, [loading, isAuthenticated]);
 
   if (loading) {
     return (
@@ -141,7 +144,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return null; // Will redirect to login
   }
 
@@ -171,10 +174,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthProvider>
-      <DashboardLayoutContent>
-        {children}
-      </DashboardLayoutContent>
-    </AuthProvider>
+    <DashboardLayoutContent>
+      {children}
+    </DashboardLayoutContent>
   );
 }

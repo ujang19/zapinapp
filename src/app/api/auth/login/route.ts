@@ -8,8 +8,10 @@ const prisma = new PrismaClient()
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
+    console.log('Login attempt:', { email })
 
     if (!email || !password) {
+      console.log('Missing credentials')
       return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
@@ -25,6 +27,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
+      console.log('User not found:', email)
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -33,6 +36,8 @@ export async function POST(request: NextRequest) {
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password)
+    console.log('Password validation:', { email, isValid: isValidPassword })
+    
     if (!isValidPassword) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
@@ -42,6 +47,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user is active
     if (!user.isActive) {
+      console.log('Inactive account:', email)
       return NextResponse.json(
         { error: 'Account is deactivated' },
         { status: 401 }
@@ -60,8 +66,9 @@ export async function POST(request: NextRequest) {
       { expiresIn: '24h' }
     )
 
+    console.log('Login successful:', { email, userId: user.id })
 
-    // Return success response
+    // Create response
     const response = NextResponse.json({
       success: true,
       user: {
@@ -79,17 +86,27 @@ export async function POST(request: NextRequest) {
         },
       },
       token,
-    })
+      refreshToken: token, // Add refresh token
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+    }, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store',
+        'Pragma': 'no-cache'
+      }
+    });
 
-    // Set HTTP-only cookie for token (matching AuthServer expectation)
+    // Set HTTP-only cookie for token with strict settings
     response.cookies.set('zapin_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60, // 24 hours
-    })
+      path: '/',
+      maxAge: 24 * 60 * 60 // 24 hours in seconds
+    });
 
-    return response
+    console.log('Response cookies set:', response.cookies.getAll())
+    return response;
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(

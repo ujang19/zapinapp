@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useApiKeys } from '../../../hooks/useAuth';
+import { useApiKeys } from '../../../hooks/useApiKeys';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
@@ -155,7 +155,7 @@ function CreateApiKeyModal({ isOpen, onClose, onSubmit }: CreateApiKeyModalProps
 }
 
 export default function ApiKeysPage() {
-  const { apiKeys, loading, createApiKey, revokeApiKey } = useApiKeys();
+  const { apiKeys, loading, createApiKey, deleteApiKey: revokeApiKey } = useApiKeys();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
@@ -294,10 +294,10 @@ export default function ApiKeysPage() {
                         <Calendar className="h-3 w-3" />
                         <span>Created {format(new Date(apiKey.createdAt), 'MMM d, yyyy')}</span>
                       </div>
-                      {apiKey.lastUsedAt && (
+                      {apiKey.lastUsed && (
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
-                          <span>Last used {format(new Date(apiKey.lastUsedAt), 'MMM d, yyyy')}</span>
+                          <span>Last used {format(new Date(apiKey.lastUsed), 'MMM d, yyyy')}</span>
                         </div>
                       )}
                       {apiKey.expiresAt && (

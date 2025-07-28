@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, usePasswordManagement } from '../../../hooks/useAuth';
+import { useAuth } from '../../../hooks/useAuth';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
@@ -10,8 +10,7 @@ import { Alert, AlertDescription } from '../../../components/ui/alert';
 import { User, Lock, Building, Save, Eye, EyeOff } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user } = useAuth();
-  const { changePassword, loading: passwordLoading } = usePasswordManagement();
+  const { user, changePassword, loading: passwordLoading } = useAuth();
   
   // Profile form state
   const [profileData, setProfileData] = useState({

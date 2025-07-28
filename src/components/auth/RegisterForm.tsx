@@ -61,7 +61,8 @@ export function RegisterForm() {
 
     const passwordValid = validateField('password', formData.password, {
       required: true,
-      password: true
+      password: true,
+      minLength: 8
     });
 
     const confirmPasswordValid = validateField('confirmPassword', formData.confirmPassword, {

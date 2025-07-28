@@ -59,25 +59,31 @@ export function LoginForm() {
     }
 
     try {
+      console.log('Attempting login with:', { email: formData.email });
       await login(formData.email, formData.password);
-      router.push(redirectTo);
+      console.log('Login successful, redirecting to:', redirectTo);
+      
+      // Add a delay to ensure cookie is set and state is updated
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Use window.location for hard navigation
+      window.location.href = redirectTo;
     } catch (error) {
+      console.error('Login error:', error);
       setSubmitError(error instanceof Error ? error.message : 'Login failed');
     }
   };
 
   return (
     <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">
-          Sign in to Zapin
-        </CardTitle>
-        <CardDescription className="text-center">
-          Enter your email and password to access your account
-        </CardDescription>
-      </CardHeader>
-      
       <form onSubmit={handleSubmit}>
+        <CardHeader>
+          <CardTitle>Sign in to your account</CardTitle>
+          <CardDescription>
+            Enter your email and password to access your account
+          </CardDescription>
+        </CardHeader>
+
         <CardContent className="space-y-4">
           {submitError && (
             <Alert variant="destructive">

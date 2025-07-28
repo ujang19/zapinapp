@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { jwtVerify } from 'jose';
+
+export const runtime = 'nodejs';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -8,40 +10,63 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 const protectedRoutes = ['/dashboard'];
 const authRoutes = ['/login', '/register'];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Get token from cookies or Authorization header
-  const token = request.cookies.get('zapin_token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '');
+  // Get token from cookies
+  const token = request.cookies.get('zapin_token')?.value;
 
   // Check if user is authenticated
   let isAuthenticated = false;
+
+  
   if (token) {
     try {
-      jwt.verify(token, JWT_SECRET);
+      const secret = new TextEncoder().encode(JWT_SECRET);
+      const { payload } = await jwtVerify(token, secret);
+
       isAuthenticated = true;
     } catch (error) {
       // Token is invalid or expired
+
       isAuthenticated = false;
+      // Create response with cleared cookie and force redirect to login
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.set('zapin_token', '', {
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0
+      });
+      return response;
     }
   }
 
   // Redirect authenticated users away from auth pages
   if (isAuthenticated && authRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const response = NextResponse.redirect(new URL('/dashboard', request.url));
+    return response;
   }
 
   // Redirect unauthenticated users to login for protected routes
   if (!isAuthenticated && protectedRoutes.some(route => pathname.startsWith(route))) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    // Ensure cookie is cleared for unauthenticated users
+    response.cookies.set('zapin_token', '', {
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0
+    });
+    return response;
   }
 
   return NextResponse.next();
 }
 
+// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
     /*

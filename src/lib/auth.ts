@@ -30,35 +30,14 @@ export interface AuthTokens {
  * Client-side authentication utilities
  */
 export class AuthClient {
-  private static readonly TOKEN_KEY = 'zapin_token';
-  private static readonly REFRESH_TOKEN_KEY = 'zapin_refresh_token';
   private static readonly USER_KEY = 'zapin_user';
 
   /**
-   * Store authentication data in localStorage
+   * Store authentication data
    */
-  static setAuth(user: AuthUser, tokens: AuthTokens): void {
+  static setAuth(user: AuthUser): void {
     if (typeof window === 'undefined') return;
-
-    localStorage.setItem(this.TOKEN_KEY, tokens.token);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-  }
-
-  /**
-   * Get stored authentication token
-   */
-  static getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  /**
-   * Get stored refresh token
-   */
-  static getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   /**
@@ -82,9 +61,6 @@ export class AuthClient {
    */
   static clearAuth(): void {
     if (typeof window === 'undefined') return;
-
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
   }
 
@@ -92,121 +68,7 @@ export class AuthClient {
    * Check if user is authenticated
    */
   static isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    try {
-      const decoded = jwt.decode(token) as JWTPayload;
-      if (!decoded || !decoded.exp) return false;
-
-      // Check if token is expired (with 5 minute buffer)
-      const now = Math.floor(Date.now() / 1000);
-      return decoded.exp > (now + 300);
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Get authorization header for API requests
-   */
-  static getAuthHeader(): Record<string, string> {
-    const token = this.getToken();
-    if (!token) return {};
-
-    return {
-      Authorization: `Bearer ${token}`
-    };
-  }
-
-  /**
-   * Make authenticated API request
-   */
-  static async apiRequest<T = any>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${API_URL}${endpoint}`;
-    const headers = {
-      'Content-Type': 'application/json',
-      ...this.getAuthHeader(),
-      ...options.headers
-    };
-
-    const response = await fetch(url, {
-      ...options,
-      headers
-    });
-
-    if (response.status === 401) {
-      // Try to refresh token
-      const refreshed = await this.refreshToken();
-      if (refreshed) {
-        // Retry the request with new token
-        const newHeaders = {
-          ...headers,
-          ...this.getAuthHeader()
-        };
-        
-        const retryResponse = await fetch(url, {
-          ...options,
-          headers: newHeaders
-        });
-
-        if (!retryResponse.ok) {
-          throw new Error(`API request failed: ${retryResponse.statusText}`);
-        }
-
-        return retryResponse.json();
-      } else {
-        // Refresh failed, redirect to login
-        this.clearAuth();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-        throw new Error('Authentication failed');
-      }
-    }
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
-    }
-
-    return response.json();
-  }
-
-  /**
-   * Refresh authentication token
-   */
-  static async refreshToken(): Promise<boolean> {
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) return false;
-
-    try {
-      const response = await fetch(`${API_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ refreshToken })
-      });
-
-      if (!response.ok) return false;
-
-      const data = await response.json();
-      if (!data.success) return false;
-
-      // Update stored auth data
-      this.setAuth(data.data.user, {
-        token: data.data.token,
-        refreshToken: data.data.refreshToken,
-        expiresAt: new Date(data.data.expiresAt)
-      });
-
-      return true;
-    } catch {
-      return false;
-    }
+    return !!this.getUser();
   }
 
   /**
@@ -243,64 +105,34 @@ export class AuthClient {
       }
     };
 
-    // Store auth data
-    localStorage.setItem(this.TOKEN_KEY, data.token);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    // Store user data
+    this.setAuth(user);
 
     return user;
-  }
-
-  /**
-   * Register new user
-   */
-  static async register(userData: {
-    email: string;
-    password: string;
-    name: string;
-    tenantName: string;
-    tenantSlug?: string;
-  }): Promise<AuthUser> {
-    const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(userData)
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      throw new Error(data.error?.message || 'Registration failed');
-    }
-
-    // Store auth data
-    this.setAuth(data.data.user, {
-      token: data.data.token,
-      refreshToken: data.data.refreshToken,
-      expiresAt: new Date(data.data.expiresAt)
-    });
-
-    return data.data.user;
   }
 
   /**
    * Logout user
    */
   static async logout(): Promise<void> {
-    // Clear local storage first
-    this.clearAuth();
-
-    // Try to logout on server (don't throw if it fails)
     try {
-      await fetch('/api/auth/logout', {
+      // Call logout API first
+      const response = await fetch('/api/auth/logout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        credentials: 'include' // Important: include credentials to handle cookies
       });
-    } catch {
-      // Ignore server logout errors
+
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+
+      // Only clear local storage after successful server logout
+      this.clearAuth();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear local storage on error to prevent stuck states
+      this.clearAuth();
+      throw error;
     }
   }
 }

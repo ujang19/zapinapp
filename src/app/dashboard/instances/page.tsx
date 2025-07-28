@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
 import { Plus, Search, Filter, MoreHorizontal, Smartphone, Wifi, WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -55,7 +56,7 @@ const statusConfig = {
   ERROR: { label: 'Error', color: 'bg-red-600', icon: AlertCircle },
 };
 
-export default function InstancesPage() {
+function InstancesContent() {
   const router = useRouter();
   const { toast } = useToast();
   const [instances, setInstances] = useState<Instance[]>([]);
@@ -468,5 +469,13 @@ export default function InstancesPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function InstancesPage() {
+  return (
+    <Suspense>
+      <InstancesContent />
+    </Suspense>
   );
 }
