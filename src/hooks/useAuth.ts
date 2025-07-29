@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { AuthClient, AuthUser } from '../lib/auth';
 import type { ReactNode } from 'react';
 
@@ -18,7 +18,7 @@ interface UseAuthReturn {
 
 const AuthContext = createContext<UseAuthReturn | undefined>(undefined);
 
-export function useAuth(): UseAuthReturn {
+function useAuthContext(): UseAuthReturn {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -26,7 +26,7 @@ export function useAuth(): UseAuthReturn {
   return context;
 }
 
-export function useAuthState() {
+function useAuthState() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -160,7 +160,7 @@ export function useAuthState() {
 }
 
 // Provider component
-export function AuthProvider({ children }: { children: ReactNode }) {
+function AuthProviderComponent({ children }: { children: ReactNode }) {
   const auth = useAuthState();
 
   return (
@@ -276,4 +276,4 @@ function useFormValidation(): UseFormValidationReturn {
   };
 }
 
-export { AuthProvider, useAuthContext as useAuth, useFormValidation };
+export { AuthProviderComponent as AuthProvider, useAuthContext as useAuth, useFormValidation };

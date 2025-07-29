@@ -72,6 +72,18 @@ export class AuthClient {
   }
 
   /**
+   * Get authorization header for API requests
+   */
+  static getAuthHeader(): Record<string, string> {
+    const user = this.getUser();
+    if (!user) return {};
+    
+    // In a real implementation, you'd store and return the actual JWT token
+    // For now, we'll return an empty object since the token is handled via cookies
+    return {};
+  }
+
+  /**
    * Login user
    */
   static async login(email: string, password: string): Promise<AuthUser> {
@@ -102,6 +114,46 @@ export class AuthClient {
         slug: data.user.tenant.slug,
         plan: data.user.tenant.plan || 'FREE',
         status: data.user.tenant.status || 'ACTIVE'
+      }
+    };
+
+    // Store user data
+    this.setAuth(user);
+
+    return user;
+  }
+
+  /**
+   * Register new user
+   */
+  static async register(data: { email: string; password: string; name: string; tenantName: string; tenantSlug?: string; }): Promise<AuthUser> {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok || !responseData.success) {
+      throw new Error(responseData.error || 'Registration failed');
+    }
+
+    // Ensure user data has the expected structure
+    const user: AuthUser = {
+      id: responseData.user.id,
+      email: responseData.user.email,
+      name: responseData.user.name,
+      role: responseData.user.role,
+      avatar: responseData.user.avatar || null,
+      tenant: {
+        id: responseData.user.tenant.id,
+        name: responseData.user.tenant.name,
+        slug: responseData.user.tenant.slug,
+        plan: responseData.user.tenant.plan || 'FREE',
+        status: responseData.user.tenant.status || 'ACTIVE'
       }
     };
 
