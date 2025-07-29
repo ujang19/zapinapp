@@ -10,6 +10,9 @@ import {
   MessageSquare,
   Bot,
   Users,
+  Key,
+  Webhook,
+  Server,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -22,18 +25,33 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: BarChartBig },
   {
     name: "Bots",
-    href: "/dashboard/bots",
+    href: "/bots",
     icon: Bot,
   },
   {
+    name: "Instances",
+    href: "/instances",
+    icon: Server,
+  },
+  {
     name: "Messages",
-    href: "/dashboard/messages",
+    href: "/messages",
     icon: MessageSquare,
   },
   {
     name: "Contact",
-    href: "/dashboard/contact",
+    href: "/contact",
     icon: Users,
+  },
+  {
+    name: "Webhooks",
+    href: "/webhooks",
+    icon: Webhook,
+  },
+  {
+    name: "API Keys",
+    href: "/api-keys",
+    icon: Key,
   },
   {
     name: "Analytics",
@@ -42,7 +60,7 @@ const navigation = [
   },
   {
     name: "Settings",
-    href: "/dashboard/settings",
+    href: "/settings",
     icon: Settings2,
   },
 ] as const
@@ -55,8 +73,11 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
   const pathname = usePathname()
   const isActive = (itemHref: string) => {
-    if (itemHref === "/dashboard/settings") {
-      return pathname.startsWith("/dashboard/settings")
+    if (itemHref === "/settings") {
+      return pathname.startsWith("/settings")
+    }
+    if (itemHref === "/dashboard") {
+      return pathname === "/dashboard"
     }
     return pathname === itemHref || pathname.startsWith(itemHref)
   }
