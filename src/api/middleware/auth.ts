@@ -1,7 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import jwt from 'jsonwebtoken';
 import { prisma } from '../../lib/prisma';
-import { ZapinError, ErrorCodes, JWTPayload, AuthResult } from '../../types';
+import { ZapinError, ErrorCodes, AuthResult } from '../../types';
 
 // Extend FastifyRequest to include user and tenant
 declare module 'fastify' {
@@ -9,7 +8,7 @@ declare module 'fastify' {
     user?: any;
     tenant?: any;
     apiKey?: any;
-    authType?: 'jwt' | 'api_key';
+    authType?: 'api_key';
   }
 }
 
@@ -29,7 +28,6 @@ export async function authMiddleware(
     }
 
     // Attach auth info to request
-    request.user = authResult.user;
     request.tenant = authResult.tenant;
     request.apiKey = authResult.apiKey;
     request.authType = authResult.authType;
@@ -56,82 +54,27 @@ export async function authMiddleware(
 }
 
 async function authenticateRequest(request: FastifyRequest): Promise<AuthResult> {
+  // Check for apikey header first (Evolution API style)
+  const apikeyHeader = request.headers.apikey as string;
+  if (apikeyHeader) {
+    return await validateAPIKey(apikeyHeader);
+  }
+
+  // Fallback to Authorization Bearer header (original format)
   const authHeader = request.headers.authorization;
-  
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { 
-      success: false, 
-      error: 'Missing or invalid authorization header' 
-    };
+  if (!authHeader) {
+    return { success: false, error: 'No authorization header or apikey provided' };
   }
 
-  const token = authHeader.slice(7);
-  
-  // Try JWT first
-  const jwtResult = await validateJWT(token);
-  if (jwtResult.success) {
-    return jwtResult;
+  if (authHeader.startsWith('Bearer ')) {
+    const apiKey = authHeader.substring(7);
+    return await validateAPIKey(apiKey);
   }
-  
-  // Fallback to API key
-  return await validateAPIKey(token);
+
+  return { success: false, error: 'Invalid authorization format' };
 }
 
-async function validateJWT(token: string): Promise<AuthResult> {
-  try {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw new Error('JWT_SECRET not configured');
-    }
 
-    const decoded = jwt.verify(token, secret) as JWTPayload;
-    
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      include: { tenant: true }
-    });
-    
-    if (!user || !user.isActive) {
-      return { 
-        success: false, 
-        error: 'User not found or inactive' 
-      };
-    }
-
-    if (!user.tenant || user.tenant.status !== 'ACTIVE') {
-      return { 
-        success: false, 
-        error: 'Tenant not found or inactive' 
-      };
-    }
-
-    return {
-      success: true,
-      user,
-      tenant: user.tenant,
-      authType: 'jwt'
-    };
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      return { 
-        success: false, 
-        error: 'Token expired' 
-      };
-    }
-    
-    if (error instanceof jwt.JsonWebTokenError) {
-      return { 
-        success: false, 
-        error: 'Invalid token' 
-      };
-    }
-    
-    return { 
-      success: false, 
-      error: 'JWT validation failed' 
-    };
-  }
-}
 
 async function validateAPIKey(apiKey: string): Promise<AuthResult> {
   try {
@@ -192,11 +135,6 @@ async function validateAPIKey(apiKey: string): Promise<AuthResult> {
 // Middleware to check specific permissions
 export function requirePermission(permission: string) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
-    if (request.authType === 'jwt') {
-      // JWT users have full access (for now)
-      return;
-    }
-
     if (request.authType === 'api_key' && request.apiKey) {
       const hasPermission = request.apiKey.scopes.includes(permission) || 
                            request.apiKey.scopes.includes('*');
@@ -261,7 +199,6 @@ export async function optionalAuth(
     const authResult = await authenticateRequest(request);
     
     if (authResult.success) {
-      request.user = authResult.user;
       request.tenant = authResult.tenant;
       request.apiKey = authResult.apiKey;
       request.authType = authResult.authType;

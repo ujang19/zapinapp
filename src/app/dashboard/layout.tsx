@@ -97,7 +97,7 @@ function DashboardHeader({ onMenuClick }: { onMenuClick: () => void }) {
               Welcome back, {user?.name}
             </h2>
             <p className="text-sm text-gray-500">
-              {user?.tenant.name} • {user?.tenant.plan} Plan
+              Tenant ID: {user?.tenantId} • {user?.role || 'User'}
             </p>
           </div>
         </div>
@@ -129,9 +129,12 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      const currentPath = window.location.pathname;
-      // Use window.location for hard navigation
-      window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+      // Only access window on client side
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        // Use window.location for hard navigation
+        window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+      }
       return;
     }
   }, [loading, isAuthenticated]);

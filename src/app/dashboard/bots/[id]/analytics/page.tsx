@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuthToken } from '@/hooks/useClientStorage';
 
 interface BotAnalytics {
   period: '24h' | '7d' | '30d';
@@ -52,23 +53,24 @@ export default function BotAnalyticsPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { token, isClient } = useAuthToken();
   const [bot, setBot] = useState<Bot | null>(null);
   const [analytics, setAnalytics] = useState<BotAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'24h' | '7d' | '30d'>('7d');
 
   useEffect(() => {
-    if (params.id) {
+    if (params.id && isClient && token) {
       fetchBot();
       fetchAnalytics();
     }
-  }, [params.id, period]);
+  }, [params.id, period, isClient, token]);
 
   const fetchBot = async () => {
     try {
       const response = await fetch(`/api/v1/bots/${params.id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -93,7 +95,7 @@ export default function BotAnalyticsPage() {
       setLoading(true);
       const response = await fetch(`/api/v1/bots/${params.id}/analytics?period=${period}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -157,6 +159,15 @@ export default function BotAnalyticsPage() {
         return period;
     }
   };
+
+  // Show loading state until client is ready
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   if (loading && !analytics) {
     return (

@@ -1,5 +1,5 @@
 // Unit test specific setup
-import '../helpers/test-helpers';
+require('../helpers/test-helpers');
 
 // Mock external dependencies for unit tests
 jest.mock('../../src/lib/redis', () => ({
@@ -30,15 +30,17 @@ jest.mock('../../src/services/evolutionService', () => ({
   },
 }));
 
-// Mock WebSocket service
+// Mock websocketService (disabled service)
 jest.mock('../../src/services/websocketService', () => ({
-  WebSocketService: {
-    emit: jest.fn(),
-    broadcast: jest.fn(),
-    join: jest.fn(),
-    leave: jest.fn(),
-  },
-}));
+  getWebSocketService: jest.fn(() => null),
+  initializeWebSocketService: jest.fn(),
+  WebSocketService: jest.fn().mockImplementation(() => ({
+    sendToUser: jest.fn(),
+    sendToTenant: jest.fn(),
+    sendNotification: jest.fn(),
+    getIO: jest.fn(),
+  })),
+}), { virtual: true });
 
 // Mock file system operations
 jest.mock('fs', () => ({
@@ -59,7 +61,7 @@ jest.mock('crypto', () => ({
 
 // Mock date for consistent test results
 const mockDate = new Date('2024-01-01T00:00:00.000Z');
-jest.spyOn(global, 'Date').mockImplementation(() => mockDate as any);
+jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
 Date.now = jest.fn(() => mockDate.getTime());
 
 // Setup test environment

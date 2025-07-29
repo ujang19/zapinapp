@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { TestTube, Send, MessageSquare, User, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +34,7 @@ export function BotTester({ botId, botName, botType, isActive, onTest }: BotTest
   const [testPhone, setTestPhone] = useState('1234567890');
   const [testing, setTesting] = useState(false);
   const [messages, setMessages] = useState<TestMessage[]>([]);
+  const messageIdCounter = useRef(0);
 
   const handleTest = async () => {
     if (!testMessage.trim() || !testPhone.trim()) {
@@ -41,7 +42,7 @@ export function BotTester({ botId, botName, botType, isActive, onTest }: BotTest
     }
 
     const userMessage: TestMessage = {
-      id: Date.now().toString(),
+      id: (++messageIdCounter.current).toString(),
       content: testMessage,
       sender: 'user',
       timestamp: new Date(),
@@ -54,7 +55,7 @@ export function BotTester({ botId, botName, botType, isActive, onTest }: BotTest
       const result = await onTest(testMessage, testPhone);
       
       const botMessage: TestMessage = {
-        id: (Date.now() + 1).toString(),
+        id: (++messageIdCounter.current).toString(),
         content: result.success ? (result.response || 'No response') : (result.error || 'Error occurred'),
         sender: 'bot',
         timestamp: new Date(),
@@ -64,7 +65,7 @@ export function BotTester({ botId, botName, botType, isActive, onTest }: BotTest
       setTestMessage('');
     } catch (error) {
       const errorMessage: TestMessage = {
-        id: (Date.now() + 1).toString(),
+        id: (++messageIdCounter.current).toString(),
         content: 'Failed to send test message',
         sender: 'bot',
         timestamp: new Date(),

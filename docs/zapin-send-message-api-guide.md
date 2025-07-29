@@ -96,8 +96,40 @@ graph TD
 
 ### Headers
 
-- `Authorization: Bearer <JWT_TOKEN>` atau `Authorization: Bearer <API_KEY>`
+**Authentication (choose one):**
+- `apikey: <API_KEY>` (Evolution API style - recommended)
+- `Authorization: Bearer <JWT_TOKEN>` atau `Authorization: Bearer <API_KEY>` (legacy format)
+
+**Required:**
 - `Content-Type: application/json`
+
+### Curl Examples
+
+**Using apikey header (Evolution API style - recommended):**
+```bash
+curl -X POST "https://api.zapin.tech/v1/messages/send-text" \
+  -H "apikey: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instanceId": "your-instance-uuid",
+    "recipient": "+628123456789",
+    "text": "Hello from Zapin!",
+    "delay": 1000
+  }'
+```
+
+**Using Authorization Bearer header (legacy format):**
+```bash
+curl -X POST "https://api.zapin.tech/v1/messages/send-text" \
+  -H "Authorization: Bearer your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instanceId": "your-instance-uuid",
+    "recipient": "+628123456789",
+    "text": "Hello from Zapin!",
+    "delay": 1000
+  }'
+```
 
 ---
 
@@ -742,7 +774,7 @@ class ZapinClient {
     const response = await fetch(`${this.baseUrl}/v1/messages/send-text`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'apikey': this.apiKey,  // Evolution API style
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(params)

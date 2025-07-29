@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuthToken } from '@/hooks/useClientStorage';
 import { 
   Plus, 
   Settings, 
@@ -91,6 +92,7 @@ export default function WebhooksPage() {
   const [selectedConfig, setSelectedConfig] = useState<WebhookConfig | null>(null);
   const [showSecret, setShowSecret] = useState(false);
   const { toast } = useToast();
+  const { token, isClient } = useAuthToken();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -105,8 +107,19 @@ export default function WebhooksPage() {
   });
 
   useEffect(() => {
-    loadWebhookData();
-  }, []);
+    if (isClient && token) {
+      loadWebhookData();
+    }
+  }, [isClient, token]);
+
+  // Show loading state until client is ready
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   const loadWebhookData = async () => {
     try {
@@ -115,7 +128,7 @@ export default function WebhooksPage() {
       // Load webhook configurations
       const configsResponse = await fetch('/api/webhook/configs', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -127,7 +140,7 @@ export default function WebhooksPage() {
       // Load webhook statistics
       const statsResponse = await fetch('/api/webhook/stats?period=24h', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -139,7 +152,7 @@ export default function WebhooksPage() {
       // Load recent events
       const eventsResponse = await fetch('/api/webhook/events?limit=50', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -165,7 +178,7 @@ export default function WebhooksPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           ...formData,
@@ -204,7 +217,7 @@ export default function WebhooksPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updates)
       });
@@ -241,7 +254,7 @@ export default function WebhooksPage() {
       const response = await fetch(`/api/webhook/configs/${configId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -273,7 +286,7 @@ export default function WebhooksPage() {
       const response = await fetch(`/api/webhook/configs/${configId}/test`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
 

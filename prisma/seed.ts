@@ -34,7 +34,25 @@ async function main() {
       name: 'Admin User',
       password: hashedPassword,
       role: UserRole.ADMIN,
-      tenantId: defaultTenant.id
+      tenantId: defaultTenant.id,
+      emailVerified: true
+    }
+  });
+
+  // Create credential account for admin user
+  await prisma.account.upsert({
+    where: {
+      id: `credential_${adminUser.id}`
+    },
+    update: {},
+    create: {
+      id: `credential_${adminUser.id}`,
+      accountId: `credential_${adminUser.id}`,
+      providerId: 'credential',
+      userId: adminUser.id,
+      password: hashedPassword,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   });
 
@@ -50,7 +68,25 @@ async function main() {
       name: 'Demo User',
       password: demoPassword,
       role: UserRole.USER,
-      tenantId: defaultTenant.id
+      tenantId: defaultTenant.id,
+      emailVerified: true
+    }
+  });
+
+  // Create credential account for demo user
+  await prisma.account.upsert({
+    where: {
+      id: `credential_${demoUser.id}`
+    },
+    update: {},
+    create: {
+      id: `credential_${demoUser.id}`,
+      accountId: `credential_${demoUser.id}`,
+      providerId: 'credential',
+      userId: demoUser.id,
+      password: demoPassword,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   });
 

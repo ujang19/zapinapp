@@ -17,7 +17,7 @@ declare module 'fastify' {
     user?: any;
     tenant?: any;
     apiKey?: any;
-    authType?: 'jwt' | 'api_key';
+    authType?: 'api_key';
     quotaInfo?: any;
   }
 }

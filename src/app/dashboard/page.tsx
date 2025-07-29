@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '../../hooks/useAuth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, Grid, Metric, Text, Title, ProgressBar, Flex, Badge, List, ListItem } from '@tremor/react';
 import { MessageSquare, Bot, Users, BarChart3 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -52,118 +52,110 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <Grid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6">
         {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                {stat.title}
-              </CardTitle>
+          <Card key={stat.title} className="max-w-xs">
+            <Flex alignItems="start">
+              <div className="truncate">
+                <Text>{stat.title}</Text>
+                <Metric className="truncate">{stat.value}</Metric>
+              </div>
               <div className={`p-2 rounded-full ${stat.bgColor}`}>
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-              <p className="text-xs text-gray-500 mt-1">
-                {stat.description}
-              </p>
-            </CardContent>
+            </Flex>
+            <Text className="mt-1">{stat.description}</Text>
           </Card>
         ))}
-      </div>
+      </Grid>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Grid numItems={1} numItemsLg={2} className="gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Messages</CardTitle>
-            <CardDescription>
-              Latest messages from your WhatsApp instances
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <Title>Recent Messages</Title>
+          <Text className="mt-2">
+            Latest messages from your WhatsApp instances
+          </Text>
+          <List className="mt-4">
+            <ListItem>
+              <Flex justifyContent="start" className="space-x-3">
+                <Badge color="green" size="xs" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Customer inquiry received</p>
-                  <p className="text-xs text-gray-500">Instance: Business Main • 2 min ago</p>
+                  <Text className="font-medium">Customer inquiry received</Text>
+                  <Text className="text-xs text-gray-500">Instance: Business Main • 2 min ago</Text>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              </Flex>
+            </ListItem>
+            <ListItem>
+              <Flex justifyContent="start" className="space-x-3">
+                <Badge color="blue" size="xs" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Bot response sent</p>
-                  <p className="text-xs text-gray-500">Bot: Support Assistant • 5 min ago</p>
+                  <Text className="font-medium">Bot response sent</Text>
+                  <Text className="text-xs text-gray-500">Bot: Support Assistant • 5 min ago</Text>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              </Flex>
+            </ListItem>
+            <ListItem>
+              <Flex justifyContent="start" className="space-x-3">
+                <Badge color="orange" size="xs" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Broadcast message delivered</p>
-                  <p className="text-xs text-gray-500">Campaign: Weekly Newsletter • 1 hour ago</p>
+                  <Text className="font-medium">Broadcast message delivered</Text>
+                  <Text className="text-xs text-gray-500">Campaign: Weekly Newsletter • 1 hour ago</Text>
                 </div>
-              </div>
-            </div>
-          </CardContent>
+              </Flex>
+            </ListItem>
+          </List>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
-              Common tasks to get you started
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div className="font-medium text-sm">Create New Instance</div>
-                <div className="text-xs text-gray-500">Set up a new WhatsApp business account</div>
-              </button>
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div className="font-medium text-sm">Deploy Bot</div>
-                <div className="text-xs text-gray-500">Add automated responses to your instances</div>
-              </button>
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div className="font-medium text-sm">Generate API Key</div>
-                <div className="text-xs text-gray-500">Create keys for external integrations</div>
-              </button>
-            </div>
-          </CardContent>
+          <Title>Quick Actions</Title>
+          <Text className="mt-2">
+            Common tasks to get you started
+          </Text>
+          <div className="space-y-3 mt-4">
+            <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+              <Text className="font-medium">Create New Instance</Text>
+              <Text className="text-xs text-gray-500">Set up a new WhatsApp business account</Text>
+            </button>
+            <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+              <Text className="font-medium">Deploy Bot</Text>
+              <Text className="text-xs text-gray-500">Add automated responses to your instances</Text>
+            </button>
+            <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+              <Text className="font-medium">Generate API Key</Text>
+              <Text className="text-xs text-gray-500">Create keys for external integrations</Text>
+            </button>
+          </div>
         </Card>
-      </div>
+      </Grid>
 
       {/* Plan Information */}
       <Card>
-        <CardHeader>
-          <CardTitle>Current Plan</CardTitle>
-          <CardDescription>
-            Your subscription details and usage
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg">{user?.tenant.plan} Plan</h3>
-              <p className="text-gray-600">
-                Organization: {user?.tenant.name}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-500">Monthly Usage</div>
-              <div className="text-2xl font-bold">1,234 / 10,000</div>
-              <div className="text-xs text-gray-500">messages sent</div>
-            </div>
+        <Title>Current Plan</Title>
+        <Text className="mt-2">
+          Your subscription details and usage
+        </Text>
+        <Flex className="mt-4" justifyContent="between">
+          <div>
+            <Title className="text-lg">Business Plan</Title>
+            <Text className="text-gray-600">
+              User: {user?.name} • Role: {user?.role || 'User'}
+            </Text>
           </div>
-          <div className="mt-4">
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '12.34%' }}></div>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">12.34% of monthly quota used</p>
+          <div className="text-right">
+            <Text className="text-sm text-gray-500">Monthly Usage</Text>
+            <Metric>1,234 / 10,000</Metric>
+            <Text className="text-xs text-gray-500">messages sent</Text>
           </div>
-        </CardContent>
+        </Flex>
+        <div className="mt-4">
+          <Flex className="mt-2">
+            <Text>Usage Progress</Text>
+            <Text>12.34%</Text>
+          </Flex>
+          <ProgressBar value={12.34} className="mt-2" />
+          <Text className="text-xs text-gray-500 mt-1">12.34% of monthly quota used</Text>
+        </div>
       </Card>
     </div>
   );

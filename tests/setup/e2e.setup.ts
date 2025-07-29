@@ -181,6 +181,7 @@ export async function createTestUser(userData: {
       role: 'ADMIN',
       isActive: true,
       tenantId: tenant.id,
+      emailVerified: true,
     },
   });
 

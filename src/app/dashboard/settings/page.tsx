@@ -7,10 +7,10 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
-import { User, Lock, Building, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Building, Save } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user, changePassword, loading: passwordLoading } = useAuth();
+  const { user } = useAuth();
   
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -20,24 +20,10 @@ export default function SettingsPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
 
-  // Password form state
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false
-  });
-  const [passwordMessage, setPasswordMessage] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-
   // Organization form state
   const [orgData, setOrgData] = useState({
-    name: user?.tenant.name || '',
-    slug: user?.tenant.slug || ''
+    name: 'Default Organization',
+    slug: 'default-org'
   });
   const [orgLoading, setOrgLoading] = useState(false);
   const [orgMessage, setOrgMessage] = useState('');
@@ -58,30 +44,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordError('');
-    setPasswordMessage('');
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters long');
-      return;
-    }
-
-    try {
-      await changePassword(passwordData.currentPassword, passwordData.newPassword);
-      setPasswordMessage('Password changed successfully!');
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (error) {
-      setPasswordError(error instanceof Error ? error.message : 'Failed to change password');
-    }
-  };
-
   const handleOrgSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setOrgLoading(true);
@@ -96,13 +58,6 @@ export default function SettingsPage() {
     } finally {
       setOrgLoading(false);
     }
-  };
-
-  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
   };
 
   return (
@@ -159,7 +114,16 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Role</Label>
                 <Input
-                  value={user?.role || ''}
+                  value={user?.role || 'User'}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tenant ID</Label>
+                <Input
+                  value={user?.tenantId || ''}
                   disabled
                   className="bg-gray-50"
                 />
@@ -182,112 +146,29 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Lock className="h-5 w-5 mr-2" />
-              Change Password
+              Password Management
             </CardTitle>
             <CardDescription>
-              Update your account password
+              Password changes are handled through Better Auth
             </CardDescription>
           </CardHeader>
           
-          <form onSubmit={handlePasswordSubmit}>
-            <CardContent className="space-y-4">
-              {passwordMessage && (
-                <Alert>
-                  <AlertDescription>{passwordMessage}</AlertDescription>
-                </Alert>
-              )}
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                To change your password, please use the Better Auth password reset flow or contact your administrator.
+              </AlertDescription>
+            </Alert>
 
-              {passwordError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{passwordError}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showPasswords.current ? 'text' : 'password'}
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    disabled={passwordLoading}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => togglePasswordVisibility('current')}
-                  >
-                    {showPasswords.current ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <div className="relative">
-                  <Input
-                    id="newPassword"
-                    type={showPasswords.new ? 'text' : 'password'}
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                    disabled={passwordLoading}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => togglePasswordVisibility('new')}
-                  >
-                    {showPasswords.new ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showPasswords.confirm ? 'text' : 'password'}
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    disabled={passwordLoading}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => togglePasswordVisibility('confirm')}
-                  >
-                    {showPasswords.confirm ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={passwordLoading}
-                className="w-full"
-              >
-                <Lock className="h-4 w-4 mr-2" />
-                {passwordLoading ? 'Changing...' : 'Change Password'}
-              </Button>
-            </CardContent>
-          </form>
+            <Button
+              disabled
+              className="w-full"
+              variant="outline"
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Password Reset (Coming Soon)
+            </Button>
+          </CardContent>
         </Card>
 
         {/* Organization Settings */}
@@ -339,7 +220,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Current Plan</Label>
                   <Input
-                    value={user?.tenant.plan || ''}
+                    value="Business Plan"
                     disabled
                     className="bg-gray-50"
                   />
@@ -348,7 +229,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Input
-                    value={user?.tenant.status || ''}
+                    value="Active"
                     disabled
                     className="bg-gray-50"
                   />

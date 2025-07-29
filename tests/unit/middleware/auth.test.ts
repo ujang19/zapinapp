@@ -85,6 +85,46 @@ describe('Auth Middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
+    it('should authenticate with apikey header (Evolution API style)', async () => {
+      // Arrange
+      const apiKey = 'zap_test_api_key_12345678901234567890';
+      const mockApiKey = TestDataFactory.createApiKeyData({
+        key: apiKey,
+        isActive: true,
+        expiresAt: new Date(Date.now() + 86400000), // 24 hours from now
+      });
+      const mockTenant = TestDataFactory.createTenantData({
+        id: mockApiKey.tenantId,
+        status: 'ACTIVE',
+      });
+
+      req.headers.apikey = apiKey;
+
+      mockPrisma.apiKey.findUnique.mockResolvedValue({
+        ...mockApiKey,
+        tenant: mockTenant,
+      });
+
+      // Act
+      await authMiddleware(req, res, next);
+
+      // Assert
+      expect(mockPrisma.apiKey.findUnique).toHaveBeenCalledWith({
+        where: { key: apiKey },
+        include: { tenant: true, user: true },
+      });
+      expect(req.tenant).toEqual(expect.objectContaining({
+        id: mockTenant.id,
+        name: mockTenant.name,
+      }));
+      expect(req.apiKey).toEqual(expect.objectContaining({
+        id: mockApiKey.id,
+        key: mockApiKey.key,
+      }));
+      expect(req.authType).toBe('api_key');
+      expect(next).toHaveBeenCalled();
+    });
+
     it('should reject request with invalid authorization format', async () => {
       // Arrange
       req.headers.authorization = 'InvalidFormat token';

@@ -83,10 +83,13 @@ module.exports = {
   
   // Transform configuration
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
+    '^.+\.tsx?$': ['ts-jest', {
       tsconfig: 'tsconfig.json'
     }]
   },
+
+  // Coverage provider
+  coverageProvider: 'v8',
   
   // Module file extensions
   moduleFileExtensions: [
@@ -134,14 +137,12 @@ module.exports = {
     {
       displayName: 'integration',
       testMatch: ['<rootDir>/tests/integration/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/tests/setup/integration.setup.ts'],
-      testTimeout: 60000
+      setupFilesAfterEnv: ['<rootDir>/tests/setup/integration.setup.ts']
     },
     {
       displayName: 'e2e',
       testMatch: ['<rootDir>/tests/e2e/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/tests/setup/e2e.setup.ts'],
-      testTimeout: 120000
+      setupFilesAfterEnv: ['<rootDir>/tests/setup/e2e.setup.ts']
     }
   ]
 };

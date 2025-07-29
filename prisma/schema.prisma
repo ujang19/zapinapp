@@ -11,6 +11,7 @@ datasource db {
 }
 
 // User and Tenant Management
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -26,23 +27,27 @@ model User {
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   tenantId String
 
-  sessions    Session[]
-  apiKeys     ApiKey[]
-  auditLogs   AuditLog[]
+  sessions  Session[]
+  apiKeys   ApiKey[]
+  auditLogs AuditLog[]
+
+  emailVerified Boolean
+  image         String?
+  accounts      Account[]
 
   @@map("users")
 }
 
 model Tenant {
-  id          String     @id @default(cuid())
-  name        String
-  slug        String     @unique
-  domain      String?    @unique
-  plan        PlanType   @default(BASIC)
-  status      TenantStatus @default(ACTIVE)
-  settings    Json?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  domain    String?      @unique
+  plan      PlanType     @default(BASIC)
+  status    TenantStatus @default(ACTIVE)
+  settings  Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   // Relations
   users       User[]
@@ -58,6 +63,7 @@ model Tenant {
 }
 
 // Authentication
+
 model Session {
   id        String   @id @default(cuid())
   token     String   @unique
@@ -67,19 +73,23 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+
   @@map("sessions")
 }
 
 model ApiKey {
-  id          String   @id @default(cuid())
-  name        String
-  key         String   @unique
-  scopes      String[] // e.g., ["messages:send", "instances:read"]
-  isActive    Boolean  @default(true)
-  lastUsedAt  DateTime?
-  expiresAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid())
+  name       String
+  key        String    @unique
+  scopes     String[] // e.g., ["messages:send", "instances:read"]
+  isActive   Boolean   @default(true)
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   // Relations
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -91,20 +101,21 @@ model ApiKey {
 }
 
 // WhatsApp Instance Management
+
 model Instance {
-  id                    String        @id @default(cuid())
-  name                  String
-  evolutionKey          String        @unique
-  evolutionInstanceId   String        @unique
-  phoneNumber           String?
-  status                InstanceStatus @default(CREATED)
-  qrCode                String?
-  settings              Json?
-  webhookUrl            String?
-  isActive              Boolean       @default(true)
-  lastConnectedAt       DateTime?
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  id                  String         @id @default(cuid())
+  name                String
+  evolutionKey        String         @unique
+  evolutionInstanceId String         @unique
+  phoneNumber         String?
+  status              InstanceStatus @default(CREATED)
+  qrCode              String?
+  settings            Json?
+  webhookUrl          String?
+  isActive            Boolean        @default(true)
+  lastConnectedAt     DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   // Relations
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -116,15 +127,16 @@ model Instance {
 }
 
 // Bot Management
+
 model Bot {
-  id              String    @id @default(cuid())
-  name            String
-  type            BotType
-  evolutionBotId  String?   @unique
-  config          Json
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  name           String
+  type           BotType
+  evolutionBotId String?  @unique
+  config         Json
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
   tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -137,17 +149,17 @@ model Bot {
 }
 
 model BotSession {
-  id          String    @id @default(cuid())
-  sessionId   String    @unique
+  id          String        @id @default(cuid())
+  sessionId   String        @unique
   phoneNumber String
   status      SessionStatus @default(ACTIVE)
   context     Json?
-  startedAt   DateTime  @default(now())
+  startedAt   DateTime      @default(now())
   endedAt     DateTime?
-  updatedAt   DateTime  @updatedAt
+  updatedAt   DateTime      @updatedAt
 
   // Relations
-  bot      Bot            @relation(fields: [botId], references: [id], onDelete: Cascade)
+  bot      Bot          @relation(fields: [botId], references: [id], onDelete: Cascade)
   botId    String
   messages BotMessage[]
 
@@ -155,12 +167,12 @@ model BotSession {
 }
 
 model BotMessage {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   messageId String
   content   String
   type      MessageType
   direction MessageDirection
-  createdAt DateTime @default(now())
+  createdAt DateTime         @default(now())
 
   // Relations
   session   BotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
@@ -170,15 +182,16 @@ model BotMessage {
 }
 
 // Quota and Usage Management
+
 model QuotaUsage {
-  id           String    @id @default(cuid())
-  quotaType    QuotaType
-  period       String    // e.g., "2024-01", "2024-01-15", "2024-01-15-14"
-  used         Int       @default(0)
-  limit        Int
-  resetAt      DateTime
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  quotaType QuotaType
+  period    String // e.g., "2024-01", "2024-01-15", "2024-01-15-14"
+  used      Int       @default(0)
+  limit     Int
+  resetAt   DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // Relations
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -189,8 +202,9 @@ model QuotaUsage {
 }
 
 // Message Logging
+
 model MessageLog {
-  id          String      @id @default(cuid())
+  id          String        @id @default(cuid())
   messageId   String?
   endpoint    String
   method      String
@@ -198,7 +212,7 @@ model MessageLog {
   phoneNumber String?
   content     String?
   metadata    Json?
-  createdAt   DateTime    @default(now())
+  createdAt   DateTime      @default(now())
 
   // Relations
   tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -210,18 +224,19 @@ model MessageLog {
 }
 
 // Billing
+
 model Billing {
-  id            String      @id @default(cuid())
-  period        String      // e.g., "2024-01"
-  plan          PlanType
-  baseAmount    Decimal     @db.Decimal(10, 2)
-  usageAmount   Decimal     @db.Decimal(10, 2)
-  totalAmount   Decimal     @db.Decimal(10, 2)
-  status        BillingStatus @default(PENDING)
-  paidAt        DateTime?
-  dueAt         DateTime
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id          String        @id @default(cuid())
+  period      String // e.g., "2024-01"
+  plan        PlanType
+  baseAmount  Decimal       @db.Decimal(10, 2)
+  usageAmount Decimal       @db.Decimal(10, 2)
+  totalAmount Decimal       @db.Decimal(10, 2)
+  status      BillingStatus @default(PENDING)
+  paidAt      DateTime?
+  dueAt       DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   // Relations
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -232,15 +247,16 @@ model Billing {
 }
 
 // Audit Logging
+
 model AuditLog {
-  id        String   @id @default(cuid())
-  action    String
-  resource  String
+  id         String   @id @default(cuid())
+  action     String
+  resource   String
   resourceId String?
-  metadata  Json?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
 
   // Relations
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -252,6 +268,7 @@ model AuditLog {
 }
 
 // Enums
+
 enum UserRole {
   ADMIN
   USER
@@ -325,4 +342,34 @@ enum BillingStatus {
   PAID
   OVERDUE
   CANCELLED
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
 }

@@ -9,6 +9,7 @@ import { Badge } from '../../../../components/ui/badge';
 import { useToast } from '../../../../components/ui/use-toast';
 import { InstanceStatus } from '@prisma/client';
 import Image from 'next/image';
+import { useAuthToken } from '../../../../hooks/useClientStorage';
 
 interface Instance {
   id: string;
@@ -55,6 +56,7 @@ export default function InstanceDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { token, isClient } = useAuthToken();
   const [instance, setInstance] = useState<Instance | null>(null);
   const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,17 +65,17 @@ export default function InstanceDetailsPage() {
   const instanceId = params.id as string;
 
   useEffect(() => {
-    if (instanceId) {
+    if (instanceId && isClient && token) {
       fetchInstance();
       fetchConnectionInfo();
     }
-  }, [instanceId]);
+  }, [instanceId, isClient, token]);
 
   const fetchInstance = async () => {
     try {
       const response = await fetch(`/api/instances/${instanceId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -99,7 +101,7 @@ export default function InstanceDetailsPage() {
     try {
       const response = await fetch(`/api/instances/${instanceId}/connection`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -120,7 +122,7 @@ export default function InstanceDetailsPage() {
       const response = await fetch(`/api/instances/${instanceId}/connect`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -156,7 +158,7 @@ export default function InstanceDetailsPage() {
       const response = await fetch(`/api/instances/${instanceId}/restart`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -190,7 +192,7 @@ export default function InstanceDetailsPage() {
       const response = await fetch(`/api/instances/${instanceId}/logout`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -224,7 +226,7 @@ export default function InstanceDetailsPage() {
       const response = await fetch(`/api/instances/${instanceId}/qr-refresh`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -285,6 +287,15 @@ export default function InstanceDetailsPage() {
       minute: '2-digit',
     });
   };
+
+  // Show loading state until client is ready
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

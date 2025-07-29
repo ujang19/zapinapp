@@ -6,9 +6,11 @@ export default async function globalSetup() {
 
   try {
     // Set test environment
-    (process.env as any).NODE_ENV = 'test';
-    (process.env as any).DATABASE_URL = 'postgresql://zapin:dev_password@localhost:5433/zapin_db_test';
-    (process.env as any).REDIS_URL = 'redis://:dev_password@localhost:6380';
+    Object.assign(process.env, {
+      NODE_ENV: 'test',
+      DATABASE_URL: 'postgresql://zapin:dev_password@localhost:5433/zapin_db_test',
+      REDIS_URL: 'redis://:dev_password@localhost:6380'
+    });
 
     // Start test containers if not running
     console.log('📦 Starting test containers...');

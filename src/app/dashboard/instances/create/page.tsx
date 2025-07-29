@@ -8,6 +8,7 @@ import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { useToast } from '../../../../components/ui/use-toast';
+import { useAuthToken } from '../../../../hooks/useClientStorage';
 import { z } from 'zod';
 
 const CreateInstanceSchema = z.object({
@@ -29,7 +30,17 @@ type CreateInstanceForm = z.infer<typeof CreateInstanceSchema>;
 export default function CreateInstancePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { token, isClient } = useAuthToken();
   const [loading, setLoading] = useState(false);
+
+  // Show loading state until client is ready
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
   const [formData, setFormData] = useState<CreateInstanceForm>({
     name: '',
     webhookUrl: '',
@@ -109,7 +120,7 @@ export default function CreateInstancePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });

@@ -25,6 +25,7 @@ import {
   TableRow,
 } from '../../../components/ui/table';
 import { useToast } from '../../../components/ui/use-toast';
+import { useAuthToken } from '../../../hooks/useClientStorage';
 import { InstanceStatus } from '@prisma/client';
 
 interface Instance {
@@ -59,20 +60,32 @@ const statusConfig = {
 function InstancesContent() {
   const router = useRouter();
   const { toast } = useToast();
+  const { token, isClient } = useAuthToken();
   const [instances, setInstances] = useState<Instance[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<InstanceStatus | 'ALL'>('ALL');
 
   useEffect(() => {
-    fetchInstances();
-  }, []);
+    if (isClient && token) {
+      fetchInstances();
+    }
+  }, [isClient, token]);
+
+  // Show loading state until client is ready
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   const fetchInstances = async () => {
     try {
       const response = await fetch('/api/instances', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -99,7 +112,7 @@ function InstancesContent() {
       const response = await fetch(`/api/instances/${instanceId}/connect`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -129,7 +142,7 @@ function InstancesContent() {
       const response = await fetch(`/api/instances/${instanceId}/restart`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -159,7 +172,7 @@ function InstancesContent() {
       const response = await fetch(`/api/instances/${instanceId}/logout`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -193,7 +206,7 @@ function InstancesContent() {
       const response = await fetch(`/api/instances/${instanceId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 

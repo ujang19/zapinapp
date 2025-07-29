@@ -28,9 +28,12 @@ Authorization: Bearer <jwt_token>
 \`\`\`
 
 ### 2. API Key
-For programmatic access:
+For programmatic access (choose one format):
 \`\`\`
-Authorization: Bearer <api_key>
+apikey: <api_key>  (Evolution API style - recommended)
+\`\`\`
+\`\`\`
+Authorization: Bearer <api_key>  (legacy format)
 \`\`\`
 
 ## Rate Limiting
@@ -158,10 +161,17 @@ Official SDKs available for:
         name: 'Authorization',
         in: 'header',
         description: 'Enter your JWT token or API key in the format: Bearer <token>'
+      },
+      apikeyAuth: {
+        type: 'apiKey',
+        name: 'apikey',
+        in: 'header',
+        description: 'Enter your API key directly (Evolution API style)'
       }
     },
     security: [
-      { bearerAuth: [] }
+      { bearerAuth: [] },
+      { apikeyAuth: [] }
     ],
     tags: [
       {

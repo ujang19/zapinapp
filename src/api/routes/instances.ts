@@ -43,7 +43,7 @@ interface AuthenticatedRequest extends FastifyRequest {
   user?: any;
   tenant?: any;
   apiKey?: any;
-  authType?: 'jwt' | 'api_key';
+  authType?: 'api_key';
 }
 
 interface CreateInstanceBody {

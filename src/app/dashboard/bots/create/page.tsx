@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuthToken } from '@/hooks/useClientStorage';
 
 interface Instance {
   id: string;
@@ -85,6 +86,7 @@ interface OpenAIFormData {
 export default function CreateBotPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { token, isClient } = useAuthToken();
   const [step, setStep] = useState(1);
   const [botType, setBotType] = useState<BotType | null>(null);
   const [instances, setInstances] = useState<Instance[]>([]);
@@ -141,15 +143,17 @@ export default function CreateBotPage() {
   });
 
   useEffect(() => {
-    fetchInstances();
-    fetchModels();
-  }, []);
+    if (isClient && token) {
+      fetchInstances();
+      fetchModels();
+    }
+  }, [isClient, token]);
 
   const fetchInstances = async () => {
     try {
       const response = await fetch('/api/v1/instances', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -173,7 +177,7 @@ export default function CreateBotPage() {
     try {
       const response = await fetch('/api/v1/bots/available-models', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -204,7 +208,7 @@ export default function CreateBotPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -743,6 +747,15 @@ export default function CreateBotPage() {
       </div>
     );
   };
+
+  // Show loading state until client is ready
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">

@@ -31,19 +31,10 @@ export type ApiKeyWithTenant = ApiKey & {
 // Authentication types
 export interface AuthResult {
   success: boolean;
-  user?: UserWithTenant;
   tenant?: Tenant;
   apiKey?: ApiKey;
-  authType?: 'jwt' | 'api_key';
+  authType?: 'api_key';
   error?: string;
-}
-
-export interface JWTPayload {
-  userId: string;
-  tenantId: string;
-  role: string;
-  iat?: number;
-  exp?: number;
 }
 
 // API Request/Response types

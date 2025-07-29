@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuthToken } from '@/hooks/useClientStorage';
 
 interface BotStats {
   totalSessions: number;
@@ -50,6 +51,7 @@ export default function BotDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { token, isClient } = useAuthToken();
   const [bot, setBot] = useState<Bot | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -61,17 +63,17 @@ export default function BotDetailPage() {
   const [formData, setFormData] = useState<any>({});
 
   useEffect(() => {
-    if (params.id) {
+    if (params.id && isClient && token) {
       fetchBot();
     }
-  }, [params.id]);
+  }, [params.id, isClient, token]);
 
   const fetchBot = async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/v1/bots/${params.id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -105,7 +107,7 @@ export default function BotDetailPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -150,7 +152,7 @@ export default function BotDetailPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           message: testMessage,
@@ -181,7 +183,7 @@ export default function BotDetailPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           isActive: !bot?.isActive,
@@ -258,6 +260,15 @@ export default function BotDetailPage() {
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
   };
+
+  // Show loading state until client is ready
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

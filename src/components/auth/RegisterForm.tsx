@@ -89,8 +89,8 @@ export function RegisterForm() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        tenantName: formData.tenantName,
-        tenantSlug: formData.tenantSlug
+        tenantId: formData.tenantSlug || 'default-tenant',
+        role: 'user'
       });
       router.push('/dashboard');
     } catch (error) {

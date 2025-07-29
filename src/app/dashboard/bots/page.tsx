@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuthToken } from '@/hooks/useClientStorage';
 
 interface BotStats {
   totalSessions: number;
@@ -49,6 +50,7 @@ interface BotsResponse {
 export default function BotsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { token, isClient } = useAuthToken();
   const [bots, setBots] = useState<Bot[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<{
@@ -57,8 +59,19 @@ export default function BotsPage() {
   }>({});
 
   useEffect(() => {
-    fetchBots();
-  }, [filter]);
+    if (isClient && token) {
+      fetchBots();
+    }
+  }, [isClient, token, filter]);
+
+  // Show loading state until client is ready
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   const fetchBots = async () => {
     try {
@@ -69,7 +82,7 @@ export default function BotsPage() {
 
       const response = await fetch(`/api/v1/bots?${params.toString()}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -97,7 +110,7 @@ export default function BotsPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           isActive: !currentStatus,
@@ -133,7 +146,7 @@ export default function BotsPage() {
       const response = await fetch(`/api/v1/bots/${botId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 

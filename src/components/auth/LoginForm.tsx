@@ -7,11 +7,15 @@ import { useAuth, useFormValidation } from '../../hooks/useAuth';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function LoginForm() {
+export function LoginForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, loading } = useAuth();
@@ -75,113 +79,125 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit}>
-        <CardHeader>
-          <CardTitle>Sign in to your account</CardTitle>
-          <CardDescription>
-            Enter your email and password to access your account
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {submitError && (
-            <Alert variant="destructive">
-              <AlertDescription>{submitError}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className={hasErrors('email') ? 'border-red-500' : ''}
-              disabled={loading}
-            />
-            {hasErrors('email') && (
-              <div className="text-sm text-red-500">
-                {errors.email?.map((error, index) => (
-                  <div key={index}>{error}</div>
-                ))}
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Card className="overflow-hidden p-0">
+        <CardContent className="grid p-0 md:grid-cols-2">
+          <form className="p-6 md:p-8" onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col items-center text-center">
+                <h1 className="text-2xl font-bold">Welcome back</h1>
+                <p className="text-muted-foreground text-balance">
+                  Login to your Zapin account
+                </p>
               </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                className={hasErrors('password') ? 'border-red-500 pr-10' : 'pr-10'}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={loading}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
+              
+              {submitError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{submitError}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="grid gap-3">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className={hasErrors('email') ? 'border-red-500' : ''}
+                  disabled={loading}
+                  required
+                />
+                {hasErrors('email') && (
+                  <div className="text-sm text-red-500">
+                    {errors.email?.map((error, index) => (
+                      <div key={index}>{error}</div>
+                    ))}
+                  </div>
                 )}
-              </button>
-            </div>
-            {hasErrors('password') && (
-              <div className="text-sm text-red-500">
-                {errors.password?.map((error, index) => (
-                  <div key={index}>{error}</div>
-                ))}
               </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Link
-              href="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-500"
-            >
-              Forgot password?
-            </Link>
+              
+              <div className="grid gap-3">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="ml-auto text-sm underline-offset-2 hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={hasErrors('password') ? 'border-red-500 pr-10' : 'pr-10'}
+                    disabled={loading}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+                {hasErrors('password') && (
+                  <div className="text-sm text-red-500">
+                    {errors.password?.map((error, index) => (
+                      <div key={index}>{error}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Login'
+                )}
+              </Button>
+              
+              <div className="text-center text-sm">
+                Don&apos;t have an account?{" "}
+                <Link href="/register" className="underline underline-offset-4">
+                  Sign up
+                </Link>
+              </div>
+            </div>
+          </form>
+          <div className="bg-muted relative hidden md:block">
+            <img
+              src="/placeholder.svg"
+              alt="Login Image"
+              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+            />
           </div>
         </CardContent>
-
-        <CardFooter className="flex flex-col space-y-4">
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              'Sign in'
-            )}
-          </Button>
-
-          <div className="text-center text-sm">
-            Don't have an account?{' '}
-            <Link
-              href="/register"
-              className="text-blue-600 hover:text-blue-500 font-medium"
-            >
-              Sign up
-            </Link>
-          </div>
-        </CardFooter>
-      </form>
-    </Card>
+      </Card>
+      <div className="text-muted-foreground text-center text-xs text-balance">
+        By clicking continue, you agree to our{" "}
+        <Link href="#" className="underline underline-offset-4 hover:text-primary">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link href="#" className="underline underline-offset-4 hover:text-primary">
+          Privacy Policy
+        </Link>.
+      </div>
+    </div>
   );
 }

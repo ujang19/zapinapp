@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { AuthClient, AuthUser } from '../lib/auth';
+import { authClient, User } from '../lib/auth-client';
 
 export interface AuthContextType {
-  user: AuthUser | null;
+  user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: {
     email: string;
     password: string;
     name: string;
-    tenantName: string;
-    tenantSlug?: string;
+    tenantId: string;
+    role?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -30,42 +30,21 @@ export function useAuth(): AuthContextType {
 }
 
 export function useAuthState() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user as User | null;
+  const loading = isPending;
 
-  // Initialize auth state
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (AuthClient.isAuthenticated()) {
-          const userData = AuthClient.getUser();
-          if (userData) {
-            setUser(userData);
-          } else {
-            // Token exists but no user data, try to fetch from server
-            await refreshUser();
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        AuthClient.clearAuth();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-  }, []);
+  // No need for manual initialization with Better Auth
+  // The useSession hook handles this automatically
 
   const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
     try {
-      const userData = await AuthClient.login(email, password);
-      setUser(userData);
+      await authClient.signIn.email({
+        email,
+        password,
+      });
     } catch (error) {
       throw error;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -73,47 +52,39 @@ export function useAuthState() {
     email: string;
     password: string;
     name: string;
-    tenantName: string;
-    tenantSlug?: string;
+    tenantId: string;
+    role?: string;
   }) => {
-    setLoading(true);
     try {
-      const user = await AuthClient.register(userData);
-      setUser(user);
+      await authClient.signUp.email({
+        email: userData.email,
+        password: userData.password,
+        name: userData.name,
+      });
+      // Note: tenantId and role would need to be set via a separate API call
+      // or handled through Better Auth's additionalFields configuration
     } catch (error) {
       throw error;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   const logout = useCallback(async () => {
-    setLoading(true);
     try {
-      await AuthClient.logout();
-      setUser(null);
+      await authClient.signOut();
     } catch (error) {
       console.error('Logout error:', error);
-      // Clear local state even if server logout fails
-      AuthClient.clearAuth();
-      setUser(null);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   }, []);
 
   const refreshUser = useCallback(async () => {
     try {
-      const response = await AuthClient.apiRequest('/auth/me');
-      if (response.success) {
-        setUser(response.data.user);
-      } else {
-        throw new Error('Failed to fetch user data');
-      }
+      // Better Auth handles session refresh automatically
+      // This is mainly for compatibility with existing code
+      await authClient.getSession();
     } catch (error) {
       console.error('Refresh user error:', error);
-      AuthClient.clearAuth();
-      setUser(null);
+      throw error;
     }
   }, []);
 
@@ -124,7 +95,7 @@ export function useAuthState() {
     register,
     logout,
     refreshUser,
-    isAuthenticated: !!user && AuthClient.isAuthenticated()
+    isAuthenticated: !!user
   };
 }
 
@@ -148,7 +119,24 @@ export function useApiRequest() {
     options: RequestInit = {}
   ): Promise<T> => {
     try {
-      return await AuthClient.apiRequest<T>(endpoint, options);
+      const response = await fetch(endpoint, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        credentials: 'include', // Include cookies for Better Auth
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          await logout();
+          throw new Error('Authentication failed');
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
     } catch (error) {
       // If authentication fails, logout user
       if (error instanceof Error && error.message.includes('Authentication failed')) {

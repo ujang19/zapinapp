@@ -12,6 +12,9 @@ import {
   generateRandomString
 } from '../../../src/lib/utils';
 
+// Unmock bcryptjs for this test file to allow real hashing
+jest.unmock('bcryptjs');
+
 describe('Utils', () => {
   describe('generateApiKey', () => {
     it('should generate API key with correct format', () => {

@@ -20,9 +20,17 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Important: return the modified config
-    return config;
+  async rewrites() {
+    return [
+      {
+        source: '/api/instances/:path*',
+        destination: 'http://localhost:3001/instances/:path*',
+      },
+      {
+        source: '/api/v1/:path*',
+        destination: 'http://localhost:3001/api/v1/:path*',
+      },
+    ];
   },
   poweredByHeader: false,
   compress: true,
