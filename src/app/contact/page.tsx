@@ -7,6 +7,7 @@ import { Search, Plus, X } from "lucide-react";
 import { DataTable } from "./components/DataTable";
 import { getColumns } from "./components/Columns";
 import { Row } from "@tanstack/react-table";
+import { SharedLayout } from "@/components/layout/SharedLayout";
 
 interface ContactInfo {
   id: string;
@@ -67,15 +68,15 @@ const mockContacts: ContactInfo[] = [
 ];
 
 const getLifecycleColor = (lifecycle: string) => {
-  switch (lifecycle) {
+  switch (lifecycle.toLowerCase()) {
     case "new lead":
-      return "blue";
+      return "yellow";
     case "hot lead":
       return "red";
     case "payment":
-      return "yellow";
+      return "blue";
     case "customer":
-      return "emerald";
+      return "green";
     case "cold lead":
       return "gray";
     default:
@@ -84,19 +85,19 @@ const getLifecycleColor = (lifecycle: string) => {
 };
 
 const getStatusColor = (status: string) => {
-  switch (status) {
+  switch (status.toLowerCase()) {
     case "active":
-      return "emerald";
+      return "green";
     case "pending":
       return "yellow";
-    case "inactive":
+    case "closed":
       return "gray";
     default:
       return "gray";
   }
 };
 
-export default function ContactPage() {
+function ContactContent() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [lifecycleFilter, setLifecycleFilter] = useState("all");
@@ -293,5 +294,13 @@ export default function ContactPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <SharedLayout variant="main">
+      <ContactContent />
+    </SharedLayout>
   );
 }

@@ -83,9 +83,7 @@ export const getColumns = () =>
       cell: ({ getValue }) => {
         const lifecycle = getValue()
         return (
-          <Badge variant={getLifecycleVariant(lifecycle)}>
-            {lifecycle}
-          </Badge>
+          <Badge variant={getLifecycleVariant(lifecycle)}>{lifecycle}</Badge>
         )
       },
     }),
@@ -115,9 +113,9 @@ export const getColumns = () =>
       cell: ({ getValue }) => {
         const tags = getValue()
         return (
-          <div className="flex gap-1 flex-wrap">
+          <div className="flex flex-wrap gap-1">
             {tags.map((tag, index) => (
-              <Badge key={index} variant="default">
+              <Badge key={index} variant="neutral">
                 {tag}
               </Badge>
             ))}
@@ -135,17 +133,14 @@ export const getColumns = () =>
       cell: ({ getValue }) => {
         const status = getValue()
         return (
-          <Badge variant={getStatusVariant(status)}>
-            {status}
-          </Badge>
+          <Badge variant={getStatusVariant(status)}>{status}</Badge>
         )
       },
     }),
     columnHelper.accessor("dateAdded", {
       header: "Tanggal Ditambahkan",
       cell: ({ getValue }) => {
-        const date = getValue()
-        return format(new Date(date), "dd MMM yyyy")
+        return format(new Date(getValue()), "dd/MM/yyyy")
       },
       enableSorting: true,
       meta: {
