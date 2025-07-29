@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Bot, Settings, Play, Pause, Trash2, BarChart3, MessageSquare, Clock, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -304,44 +304,38 @@ export default function BotsPage() {
       {/* Filters */}
       <div className="flex gap-2 mb-4">
         <Button
-          variant={filter.type === undefined ? 'default' : 'outline'}
-          size="sm"
+          variant={filter.type === undefined ? 'primary' : 'secondary'}
           onClick={() => setFilter({ ...filter, type: undefined })}
         >
           All Types
         </Button>
         <Button
-          variant={filter.type === 'TYPEBOT' ? 'default' : 'outline'}
-          size="sm"
+          variant={filter.type === 'TYPEBOT' ? 'primary' : 'secondary'}
           onClick={() => setFilter({ ...filter, type: 'TYPEBOT' })}
         >
           Typebot
         </Button>
         <Button
-          variant={filter.type === 'OPENAI' ? 'default' : 'outline'}
-          size="sm"
+          variant={filter.type === 'OPENAI' ? 'primary' : 'secondary'}
           onClick={() => setFilter({ ...filter, type: 'OPENAI' })}
         >
           OpenAI
         </Button>
         <div className="ml-4 border-l pl-4">
           <Button
-            variant={filter.isActive === undefined ? 'default' : 'outline'}
-            size="sm"
+            variant={filter.isActive === undefined ? 'primary' : 'secondary'}
             onClick={() => setFilter({ ...filter, isActive: undefined })}
           >
             All Status
           </Button>
           <Button
-            variant={filter.isActive === true ? 'default' : 'outline'}
-            size="sm"
+            variant={filter.isActive === true ? 'primary' : 'secondary'}
             onClick={() => setFilter({ ...filter, isActive: true })}
           >
             Active
           </Button>
           <Button
-            variant={filter.isActive === false ? 'default' : 'outline'}
-            size="sm"
+            variant={filter.isActive === false ? 'primary' : 'secondary'}
             onClick={() => setFilter({ ...filter, isActive: false })}
           >
             Inactive
@@ -437,21 +431,18 @@ export default function BotsPage() {
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() => router.push(`/dashboard/bots/${bot.id}`)}
                         >
                           <Settings className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() => router.push(`/dashboard/bots/${bot.id}/analytics`)}
                         >
                           <BarChart3 className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() => toggleBotStatus(bot.id, bot.isActive)}
                         >
                           {bot.isActive ? (
@@ -462,7 +453,6 @@ export default function BotsPage() {
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() => deleteBot(bot.id, bot.name)}
                         >
                           <Trash2 className="h-4 w-4" />

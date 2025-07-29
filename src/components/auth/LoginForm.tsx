@@ -1,202 +1,163 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth, useFormValidation } from '../../hooks/useAuth';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Card, CardContent } from '../ui/card';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { authClient } from '@/lib/auth-client';
+import { Divider } from '@tremor/react';
+import { Button } from '@/components/ui/Button';
+import { TremorInput } from '@/components/ui/TremorInput';
+import { GitHubIcon, GoogleIcon, FacebookIcon } from '@/components/ui/SocialIcons';
+import { Loader2 } from 'lucide-react';
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+
+
+export default function LoginForm() {
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { login, loading } = useAuth();
-  const { errors, validateField, clearErrors, hasErrors } = useFormValidation();
-  
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-  const [redirectTo, setRedirectTo] = useState('/dashboard');
-
-  // Get redirect parameter from URL
-  useEffect(() => {
-    const redirect = searchParams.get('redirect');
-    if (redirect) {
-      setRedirectTo(decodeURIComponent(redirect));
-    }
-  }, [searchParams]);
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    clearErrors(field);
-    setSubmitError('');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitError('');
-
-    // Validate form
-    const emailValid = validateField('email', formData.email, {
-      required: true,
-      email: true
-    });
-
-    const passwordValid = validateField('password', formData.password, {
-      required: true,
-      minLength: 6
-    });
-
-    if (!emailValid || !passwordValid) {
-      return;
-    }
+    setIsLoading(true);
+    setError('');
 
     try {
-      console.log('Attempting login with:', { email: formData.email });
-      await login(formData.email, formData.password);
-      console.log('Login successful, redirecting to:', redirectTo);
-      
-      // Add a delay to ensure cookie is set and state is updated
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Use window.location for hard navigation
-      window.location.href = redirectTo;
-    } catch (error) {
-      console.error('Login error:', error);
-      setSubmitError(error instanceof Error ? error.message : 'Login failed');
+       const result = await authClient.signIn.email({
+         email,
+         password,
+       });
+
+       if (result.error) {
+         setError(result.error.message || 'Login failed');
+       } else {
+         router.push('/dashboard');
+       }
+     } catch (err) {
+       setError('An unexpected error occurred');
+     } finally {
+       setIsLoading(false);
+     }
+  };
+
+  const handleSocialLogin = async (provider: 'github' | 'google' | 'facebook') => {
+    try {
+      await authClient.signIn.social({
+        provider,
+        callbackURL: '/dashboard',
+      });
+    } catch (err) {
+      setError(`Failed to sign in with ${provider}`);
     }
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0">
-        <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8" onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col items-center text-center">
-                <h1 className="text-2xl font-bold">Welcome back</h1>
-                <p className="text-muted-foreground text-balance">
-                  Login to your Zapin account
-                </p>
-              </div>
-              
-              {submitError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{submitError}</AlertDescription>
-                </Alert>
-              )}
-              
-              <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={hasErrors('email') ? 'border-red-500' : ''}
-                  disabled={loading}
-                  required
-                />
-                {hasErrors('email') && (
-                  <div className="text-sm text-red-500">
-                    {errors.email?.map((error, index) => (
-                      <div key={index}>{error}</div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <div className="grid gap-3">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/forgot-password"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    className={hasErrors('password') ? 'border-red-500 pr-10' : 'pr-10'}
-                    disabled={loading}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-                {hasErrors('password') && (
-                  <div className="text-sm text-red-500">
-                    {errors.password?.map((error, index) => (
-                      <div key={index}>{error}</div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Login'
-                )}
-              </Button>
-              
-              <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link href="/register" className="underline underline-offset-4">
-                  Sign up
-                </Link>
-              </div>
-            </div>
-          </form>
-          <div className="bg-muted relative hidden md:block">
-            <img
-              src="/placeholder.svg"
-              alt="Login Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+    <div className="w-full max-w-md mx-auto">
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+        <div className="rounded-lg bg-white p-8 shadow-lg dark:bg-gray-900">
+        <h3 className="text-center text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
+          Log in or create account
+        </h3>
+        
+        {error && (
+          <div className="mt-4 rounded-tremor-default bg-red-50 p-3 text-center text-tremor-default text-red-800 dark:bg-red-900/20 dark:text-red-200">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong"
+            >
+              Email
+            </label>
+            <TremorInput
+              type="email"
+              id="email"
+              name="email"
+              autoComplete="email"
+              placeholder="john@company.com"
+              className="mt-2"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
-        </CardContent>
-      </Card>
-      <div className="text-muted-foreground text-center text-xs text-balance">
-        By clicking continue, you agree to our{" "}
-        <Link href="#" className="underline underline-offset-4 hover:text-primary">
-          Terms of Service
-        </Link>{" "}
-        and{" "}
-        <Link href="#" className="underline underline-offset-4 hover:text-primary">
-          Privacy Policy
-        </Link>.
+          <div>
+            <label
+              htmlFor="password"
+              className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong"
+            >
+              Password
+            </label>
+            <TremorInput
+              type="password"
+              id="password"
+              name="password"
+              autoComplete="current-password"
+              placeholder="password"
+              className="mt-2"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            isLoading={isLoading}
+            loadingText="Signing in..."
+            className="mt-4 w-full"
+            variant="primary"
+          >
+            Sign in
+          </Button>
+        </form>
+        <Divider />
+        <div className="flex w-full space-x-2 mt-4">
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('github')}
+              className="flex items-center justify-center flex-1 px-3 py-2 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Sign in with GitHub"
+            >
+              <GitHubIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('google')}
+              className="flex items-center justify-center flex-1 px-3 py-2 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Sign in with Google"
+            >
+              <GoogleIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('facebook')}
+              className="flex items-center justify-center flex-1 px-3 py-2 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Sign in with Facebook"
+            >
+              <FacebookIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </button>
+          </div>
+          
+          <div className="text-center text-sm mt-4">
+            Don't have an account?{' '}
+            <Link
+              href="/register"
+              className="text-blue-600 hover:text-blue-500 font-medium"
+            >
+              Sign up
+            </Link>
+          </div>
+          
+
+        </div>
       </div>
     </div>
   );

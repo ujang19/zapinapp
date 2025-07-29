@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, BarChart3, Users, MessageSquare, Clock, TrendingUp, Activity, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -207,22 +207,19 @@ export default function BotAnalyticsPage() {
         <div className="ml-auto">
           <div className="flex items-center gap-2">
             <Button
-              variant={period === '24h' ? 'default' : 'outline'}
-              size="sm"
+              variant={period === '24h' ? 'primary' : 'secondary'}
               onClick={() => setPeriod('24h')}
             >
               24h
             </Button>
             <Button
-              variant={period === '7d' ? 'default' : 'outline'}
-              size="sm"
+              variant={period === '7d' ? 'primary' : 'secondary'}
               onClick={() => setPeriod('7d')}
             >
               7d
             </Button>
             <Button
-              variant={period === '30d' ? 'default' : 'outline'}
-              size="sm"
+              variant={period === '30d' ? 'primary' : 'secondary'}
               onClick={() => setPeriod('30d')}
             >
               30d

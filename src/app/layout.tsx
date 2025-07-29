@@ -26,16 +26,16 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={GeistSans.className}>
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <body className={`${GeistSans.className} h-full antialiased`}>
         <Providers>
-          {children}
           <Toaster />
+          {children}
         </Providers>
       </body>
     </html>
-  )
+  );
 }

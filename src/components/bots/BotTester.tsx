@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { TestTube, Send, MessageSquare, User, Bot } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -147,7 +147,7 @@ export function BotTester({ botId, botName, botType, isActive, onTest }: BotTest
               <Button
                 onClick={handleTest}
                 disabled={testing || !isActive || !testMessage.trim()}
-                size="sm"
+
               >
                 {testing ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -172,7 +172,7 @@ export function BotTester({ botId, botName, botType, isActive, onTest }: BotTest
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Test Conversation</Label>
-              <Button variant="outline" size="sm" onClick={clearMessages}>
+              <Button variant="secondary" onClick={clearMessages}>
                 Clear
               </Button>
             </div>
@@ -246,8 +246,7 @@ export function BotTester({ botId, botName, botType, isActive, onTest }: BotTest
             ].map((quickMessage) => (
               <Button
                 key={quickMessage}
-                variant="outline"
-                size="sm"
+                variant="secondary"
                 onClick={() => setTestMessage(quickMessage)}
                 disabled={!isActive || testing}
               >

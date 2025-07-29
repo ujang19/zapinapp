@@ -7,7 +7,7 @@ services:
     container_name: zapin-app
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8080:8080"
       - "3001:3001"
     environment:
       - NODE_ENV=production

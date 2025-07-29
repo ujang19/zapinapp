@@ -11,6 +11,64 @@ module.exports = {
     transparent: 'transparent',
     current: 'currentColor',
     extend: {
+      keyframes: {
+        hide: {
+          from: { opacity: "1" },
+          to: { opacity: "0" },
+        },
+        slideDownAndFade: {
+          from: { opacity: "0", transform: "translateY(-6px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        slideLeftAndFade: {
+          from: { opacity: "0", transform: "translateX(6px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        slideUpAndFade: {
+          from: { opacity: "0", transform: "translateY(6px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        slideRightAndFade: {
+          from: { opacity: "0", transform: "translateX(-6px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        dialogOverlayShow: {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        dialogContentShow: {
+          from: {
+            opacity: "0",
+            transform: "translate(-50%, -45%) scale(0.95)",
+          },
+          to: { opacity: "1", transform: "translate(-50%, -50%) scale(1)" },
+        },
+        drawerSlideLeftAndFade: {
+          from: { opacity: "0", transform: "translateX(100%)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        drawerSlideRightAndFade: {
+          from: { opacity: "1", transform: "translateX(0)" },
+          to: { opacity: "0", transform: "translateX(100%)" },
+        },
+      },
+      animation: {
+        hide: "hide 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        slideDownAndFade:
+          "slideDownAndFade 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        slideLeftAndFade:
+          "slideLeftAndFade 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        slideUpAndFade: "slideUpAndFade 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        slideRightAndFade:
+          "slideRightAndFade 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        drawerSlideLeftAndFade:
+          "drawerSlideLeftAndFade 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+        drawerSlideRightAndFade: "drawerSlideRightAndFade 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+        dialogOverlayShow:
+          "dialogOverlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        dialogContentShow:
+          "dialogContentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+      },
       colors: {
         // light mode
         tremor: {

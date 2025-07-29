@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth, useFormValidation } from '../../hooks/useAuth';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { authClient } from '@/lib/auth-client';
+import { Button } from '../ui/Button';
+import { TremorInput } from '@/components/ui/TremorInput';
+import { GitHubIcon, GoogleIcon, FacebookIcon } from '@/components/ui/SocialIcons';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Divider } from '@tremor/react';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -75,12 +77,7 @@ export function RegisterForm() {
       minLength: 2
     });
 
-    const tenantSlugValid = validateField('tenantSlug', formData.tenantSlug, {
-      required: true,
-      minLength: 2
-    });
-
-    if (!nameValid || !emailValid || !passwordValid || !confirmPasswordValid || !tenantNameValid || !tenantSlugValid) {
+    if (!nameValid || !emailValid || !passwordValid || !confirmPasswordValid || !tenantNameValid) {
       return;
     }
 
@@ -98,6 +95,17 @@ export function RegisterForm() {
     }
   };
 
+  const handleSocialLogin = async (provider: 'github' | 'google' | 'facebook') => {
+    try {
+      await authClient.signIn.social({
+        provider,
+        callbackURL: '/dashboard',
+      });
+    } catch (err) {
+      setSubmitError(`Failed to sign in with ${provider}`);
+    }
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
@@ -105,7 +113,7 @@ export function RegisterForm() {
           Create your account
         </CardTitle>
         <CardDescription className="text-center">
-          Enter your details to get started with Zapin
+          Enter your details to get started
         </CardDescription>
       </CardHeader>
       
@@ -118,14 +126,14 @@ export function RegisterForm() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
+            <label htmlFor="name" className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Full Name</label>
+            <TremorInput
               id="name"
               type="text"
               placeholder="Enter your full name"
               value={formData.name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('name', e.target.value)}
-              className={hasErrors('name') ? 'border-red-500' : ''}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              error={hasErrors('name')}
               disabled={loading}
             />
             {hasErrors('name') && (
@@ -138,14 +146,14 @@ export function RegisterForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
+            <label htmlFor="email" className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Email</label>
+            <TremorInput
               id="email"
               type="email"
               placeholder="Enter your email"
               value={formData.email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('email', e.target.value)}
-              className={hasErrors('email') ? 'border-red-500' : ''}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              error={hasErrors('email')}
               disabled={loading}
             />
             {hasErrors('email') && (
@@ -158,15 +166,15 @@ export function RegisterForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <label htmlFor="password" className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Password</label>
             <div className="relative">
-              <Input
+              <TremorInput
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Create a password"
                 value={formData.password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
-                className={hasErrors('password') ? 'border-red-500 pr-10' : 'pr-10'}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                error={hasErrors('password')}
                 disabled={loading}
               />
               <button
@@ -192,15 +200,15 @@ export function RegisterForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <label htmlFor="confirmPassword" className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Confirm Password</label>
             <div className="relative">
-              <Input
+              <TremorInput
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('confirmPassword', e.target.value)}
-                className={hasErrors('confirmPassword') ? 'border-red-500 pr-10' : 'pr-10'}
+                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                error={hasErrors('confirmPassword')}
                 disabled={loading}
               />
               <button
@@ -226,14 +234,14 @@ export function RegisterForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tenantName">Organization Name</Label>
-            <Input
+            <label htmlFor="tenantName" className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Organization Name</label>
+            <TremorInput
               id="tenantName"
               type="text"
               placeholder="Enter your organization name"
               value={formData.tenantName}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('tenantName', e.target.value)}
-              className={hasErrors('tenantName') ? 'border-red-500' : ''}
+              onChange={(e) => handleInputChange('tenantName', e.target.value)}
+              error={hasErrors('tenantName')}
               disabled={loading}
             />
             {hasErrors('tenantName') && (
@@ -245,31 +253,10 @@ export function RegisterForm() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="tenantSlug">Organization Slug</Label>
-            <Input
-              id="tenantSlug"
-              type="text"
-              placeholder="organization-slug"
-              value={formData.tenantSlug}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('tenantSlug', e.target.value)}
-              className={hasErrors('tenantSlug') ? 'border-red-500' : ''}
-              disabled={loading}
-            />
-            <div className="text-xs text-gray-500">
-              This will be used in your organization URL: zapin.tech/{formData.tenantSlug}
-            </div>
-            {hasErrors('tenantSlug') && (
-              <div className="text-sm text-red-500">
-                {errors.tenantSlug?.map((error, index) => (
-                  <div key={index}>{error}</div>
-                ))}
-              </div>
-            )}
-          </div>
+
         </CardContent>
 
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="flex flex-col space-y-3">
           <Button
             type="submit"
             className="w-full"
@@ -285,11 +272,39 @@ export function RegisterForm() {
             )}
           </Button>
 
-          <div className="text-center text-sm">
+          <Divider />
+          <div className="flex w-full space-x-2">
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('github')}
+              className="flex items-center justify-center flex-1 px-3 py-2 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Sign in with GitHub"
+            >
+              <GitHubIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('google')}
+              className="flex items-center justify-center flex-1 px-3 py-2 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Sign in with Google"
+            >
+              <GoogleIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('facebook')}
+              className="flex items-center justify-center flex-1 px-3 py-2 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Sign in with Facebook"
+            >
+              <FacebookIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </button>
+          </div>
+
+          <div className="text-center text-sm text-tremor-content dark:text-dark-tremor-content">
             Already have an account?{' '}
             <Link
               href="/login"
-              className="text-blue-600 hover:text-blue-500 font-medium"
+              className="text-tremor-brand hover:text-tremor-brand-emphasis dark:text-dark-tremor-brand dark:hover:text-dark-tremor-brand-emphasis font-medium underline-offset-4 hover:underline"
             >
               Sign in
             </Link>

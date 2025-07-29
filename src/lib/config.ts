@@ -10,7 +10,7 @@ const configSchema = z.object({
   APP_VERSION: z.string().default('1.0.0'),
   APP_URL: z.string().url(),
   API_URL: z.string().url(),
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().default(8080),
   API_PORT: z.coerce.number().default(3001),
 
   // Security

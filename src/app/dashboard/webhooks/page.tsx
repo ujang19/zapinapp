@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -357,7 +357,7 @@ export default function WebhooksPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={copyWebhookUrl}>
+          <Button variant="secondary" onClick={copyWebhookUrl}>
             <Copy className="h-4 w-4 mr-2" />
             Copy Webhook URL
           </Button>
@@ -447,22 +447,19 @@ export default function WebhooksPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="secondary"
                         onClick={() => handleTestConfig(config.id)}
                       >
                         <TestTube className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="secondary"
                         onClick={() => setSelectedConfig(config)}
                       >
                         <Settings className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="secondary"
                         onClick={() => handleDeleteConfig(config.id)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -593,7 +590,7 @@ export default function WebhooksPage() {
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
+    
                     className="absolute right-0 top-0 h-full px-3"
                     onClick={() => setShowSecret(!showSecret)}
                   >
@@ -656,7 +653,7 @@ export default function WebhooksPage() {
               </div>
 
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                <Button variant="secondary" onClick={() => setShowCreateForm(false)}>
                   Cancel
                 </Button>
                 <Button onClick={handleCreateConfig}>

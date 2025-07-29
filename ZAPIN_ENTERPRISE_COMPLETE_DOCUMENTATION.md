@@ -104,38 +104,303 @@ Tenant C ──┘    └── Individual Configurations
 ## 🛠️ TECHNOLOGY STACK
 
 ### **Frontend Technologies**
-- **Next.js 14.2.5**: React framework with App Router
-- **React 18**: UI library with server/client components
-- **TypeScript 5**: Type-safe development
-- **Tailwind CSS v4**: Utility-first CSS framework
+- **Next.js 15.4.4**: React framework with App Router and Turbopack
+- **React 19.1.1**: UI library with concurrent features
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework with custom design tokens
+- **Tremor 3.18.7**: Data visualization and dashboard components
+- **Radix UI**: Headless UI primitives for accessibility
 - **shadcn/ui**: Component library built on Radix UI
 - **React Hook Form**: Form handling and validation
-- **React Query**: Server state management
-- **Lucide React**: Icon library
+- **TanStack Query 5.83.0**: Server state management
+- **Lucide React 0.528.0**: Icon library
+- **Geist Font**: Modern typography
+- **next-themes**: Dark mode support
 
 ### **Backend Technologies**
-- **Fastify 4**: High-performance web framework
-- **Prisma ORM**: Database toolkit and ORM
+- **Fastify 4.24.3**: High-performance web framework
+- **Prisma ORM 5.7.0**: Type-safe database client
 - **PostgreSQL**: Primary database
-- **Redis**: Caching and session storage
-- **JWT**: Authentication tokens
-- **bcryptjs**: Password hashing
-- **Zod**: Schema validation
+- **Redis (ioredis 5.3.2)**: Caching and session storage
+- **Better Auth 1.3.4**: Modern authentication with social providers
+- **bcryptjs 2.4.3**: Password hashing
+- **Zod 3.22.4**: Schema validation
+- **Winston**: Structured logging
+- **Prometheus**: Metrics collection
 
 ### **Infrastructure & DevOps**
-- **Docker**: Containerization
+- **Docker**: Containerization with multi-stage builds
 - **Docker Compose**: Multi-container orchestration
 - **Nginx**: Reverse proxy and load balancer
 - **GitHub Actions**: CI/CD pipeline
 - **Evolution API**: WhatsApp Business integration
+- **Prometheus**: Metrics and monitoring
+- **Winston**: Application logging
 
 ### **Development Tools**
-- **ESLint**: Code linting
+- **ESLint**: Code linting with TypeScript support
 - **Prettier**: Code formatting
-- **Jest**: Unit testing
+- **Jest**: Unit and integration testing
 - **Playwright**: E2E testing
 - **Husky**: Git hooks
-- **pnpm**: Package manager
+- **pnpm**: Fast, disk space efficient package manager
+- **TypeScript**: Static type checking
+- **Tailwind Variants 2.0.1**: Component variant management
+- **Class Variance Authority**: Conditional CSS classes
+- **@faker-js/faker**: Test data generation
+
+---
+
+## 🎨 DESIGN SYSTEM & UI COMPONENTS
+
+### **Design Tokens & Theme Configuration**
+
+Zapin menggunakan sistem desain yang konsisten dengan Tailwind CSS dan Tremor sebagai fondasi utama:
+
+#### **Color Palette**
+```typescript
+// Tremor Color System
+colors: {
+  tremor: {
+    brand: {
+      faint: '#eff6ff',    // blue-50
+      muted: '#bfdbfe',    // blue-200
+      subtle: '#60a5fa',   // blue-400
+      DEFAULT: '#3b82f6',  // blue-500
+      emphasis: '#1d4ed8', // blue-700
+      inverted: '#ffffff', // white
+    },
+    background: {
+      muted: '#f9fafb',    // gray-50
+      subtle: '#f3f4f6',   // gray-100
+      DEFAULT: '#ffffff',  // white
+      emphasis: '#374151', // gray-700
+    },
+    content: {
+      subtle: '#9ca3af',   // gray-400
+      DEFAULT: '#6b7280',  // gray-500
+      emphasis: '#374151', // gray-700
+      strong: '#111827',   // gray-900
+      inverted: '#ffffff', // white
+    },
+  },
+  // Dark mode variants
+  'dark-tremor': {
+    // Mirror structure with dark-optimized colors
+  }
+}
+```
+
+#### **Typography Scale**
+```typescript
+fontSize: {
+  'tremor-label': ['0.75rem', { lineHeight: '1rem' }],     // 12px
+  'tremor-default': ['0.875rem', { lineHeight: '1.25rem' }], // 14px
+  'tremor-title': ['1.125rem', { lineHeight: '1.75rem' }],   // 18px
+  'tremor-metric': ['1.875rem', { lineHeight: '2.25rem' }],  // 30px
+}
+```
+
+#### **Spacing & Border Radius**
+```typescript
+borderRadius: {
+  'tremor-small': '0.375rem',   // 6px
+  'tremor-default': '0.5rem',   // 8px
+  'tremor-full': '9999px',      // Full rounded
+}
+```
+
+### **Component Architecture**
+
+#### **UI Component Structure**
+```
+src/components/
+├── ui/                    # Base UI components (shadcn/ui)
+│   ├── button.tsx         # Base button component
+│   ├── input.tsx          # Base input component
+│   ├── card.tsx           # Card layouts
+│   ├── alert.tsx          # Alert notifications
+│   └── ...
+├── tremor/                # Tremor components
+│   ├── Button.tsx         # Enhanced button with Tremor styling
+│   ├── Input.tsx          # Enhanced input with Tremor styling
+│   ├── Card.tsx           # Dashboard cards
+│   ├── Badge.tsx          # Status badges
+│   ├── AreaChart.tsx      # Data visualization
+│   ├── BarChart.tsx       # Bar charts
+│   └── index.ts           # Selective exports
+└── auth/                  # Feature-specific components
+    ├── LoginForm.tsx      # Authentication forms
+    └── RegisterForm.tsx
+```
+
+#### **Button Component Variants**
+```typescript
+// Tremor Button with tailwind-variants
+const buttonVariants = tv({
+  base: [
+    "relative inline-flex items-center justify-center",
+    "whitespace-nowrap rounded-md border px-3 py-2",
+    "text-center text-sm font-medium shadow-xs",
+    "transition-all duration-100 ease-in-out",
+    "disabled:pointer-events-none disabled:shadow-none",
+    focusRing,
+  ],
+  variants: {
+    variant: {
+      primary: [
+        "border-transparent text-primary-foreground",
+        "bg-primary hover:bg-primary/90",
+        "disabled:opacity-50",
+      ],
+      secondary: [
+        "border-gray-300 dark:border-gray-800",
+        "text-gray-900 dark:text-gray-50",
+        "bg-white dark:bg-gray-950",
+        "hover:bg-gray-50 dark:hover:bg-gray-900/60",
+      ],
+      destructive: [
+        "text-white border-transparent",
+        "bg-red-600 dark:bg-red-700",
+        "hover:bg-red-700 dark:hover:bg-red-600",
+      ],
+      ghost: [
+        "shadow-none border-transparent",
+        "text-gray-900 dark:text-gray-50",
+        "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800/80",
+      ],
+    },
+  },
+  defaultVariants: {
+    variant: "primary",
+  },
+})
+```
+
+### **Form Components**
+
+#### **TremorInput Component**
+```typescript
+// Enhanced input with Tremor design system
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
+
+interface TremorInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  error?: boolean;
+}
+
+export function TremorInput({ className, error, ...props }: TremorInputProps) {
+  return (
+    <Input
+      className={cn(
+        "tremor-input",
+        "border-tremor-border bg-tremor-background",
+        "text-tremor-content-emphasis",
+        "placeholder:text-tremor-content-subtle",
+        "focus:border-tremor-brand focus:ring-tremor-brand",
+        error && "border-red-500 focus:border-red-500 focus:ring-red-500",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+```
+
+### **Social Authentication Icons**
+```typescript
+// Social provider icons with consistent styling
+export function GitHubIcon({ className }: { className?: string }) {
+  return (
+    <svg className={cn("h-5 w-5", className)} viewBox="0 0 24 24">
+      {/* GitHub SVG path */}
+    </svg>
+  )
+}
+
+export function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={cn("h-5 w-5", className)} viewBox="0 0 24 24">
+      {/* Google SVG path */}
+    </svg>
+  )
+}
+
+export function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg className={cn("h-5 w-5", className)} viewBox="0 0 24 24">
+      {/* Facebook SVG path */}
+    </svg>
+  )
+}
+```
+
+### **Data Visualization Components**
+
+Zapin menggunakan Tremor untuk komponen visualisasi data:
+
+- **AreaChart**: Grafik area untuk tren data
+- **BarChart**: Grafik batang untuk perbandingan
+- **BarList**: Daftar dengan indikator visual
+- **CategoryBar**: Bar kategori untuk distribusi
+- **ProgressBar**: Indikator progress
+
+### **Accessibility & Best Practices**
+
+1. **Radix UI Primitives**: Semua komponen interaktif menggunakan Radix UI untuk aksesibilitas
+2. **Focus Management**: Implementasi focus ring yang konsisten
+3. **Keyboard Navigation**: Support penuh untuk navigasi keyboard
+4. **Screen Reader**: ARIA labels dan semantic HTML
+5. **Color Contrast**: Memenuhi standar WCAG 2.1 AA
+6. **Dark Mode**: Support penuh dengan next-themes
+
+### **Component Usage Examples**
+
+#### **Authentication Form**
+```typescript
+<form onSubmit={handleSubmit} className="space-y-4">
+  <div>
+    <label className="text-tremor-default font-medium text-tremor-content-strong">
+      Email
+    </label>
+    <TremorInput
+      type="email"
+      placeholder="john@company.com"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      required
+    />
+  </div>
+  
+  <Button type="submit" className="w-full" disabled={isLoading}>
+    {isLoading ? (
+      <>
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Signing in...
+      </>
+    ) : (
+      'Sign in'
+    )}
+  </Button>
+</form>
+```
+
+#### **Dashboard Card**
+```typescript
+<Card className="tremor-card">
+  <CardHeader>
+    <CardTitle className="text-tremor-title">Messages Sent</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="text-tremor-metric font-semibold text-tremor-content-strong">
+      1,234
+    </div>
+    <Badge variant="success" className="mt-2">
+      +12% from last month
+    </Badge>
+  </CardContent>
+</Card>
+```
 
 ---
 
@@ -512,7 +777,19 @@ export default config
 
 ## 🗄️ DATABASE SCHEMA
 
-### **Complete Prisma Schema (prisma/schema.prisma)**
+### **Database Architecture Overview**
+
+Zapin menggunakan **PostgreSQL** sebagai database utama dengan **Prisma ORM 5.7.0** untuk type-safe database operations. Database dirancang dengan arsitektur multi-tenant yang scalable dengan 13 model utama yang mendukung:
+
+- **User & Tenant Management** - Sistem multi-tenant dengan isolasi data
+- **Authentication** - Better Auth integration dengan session management
+- **WhatsApp Instance Management** - Evolution API integration
+- **Bot Management** - Typebot dan OpenAI bot support
+- **Quota & Billing** - Usage tracking dan billing system
+- **Message Logging** - Comprehensive message audit trail
+- **Audit Logging** - Security dan compliance tracking
+
+### **Prisma Configuration**
 ```prisma
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
@@ -525,8 +802,10 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+```
 
-// Enums
+### **Database Enumerations**
+```prisma
 enum UserRole {
   ADMIN
   USER
@@ -535,113 +814,181 @@ enum UserRole {
 enum TenantStatus {
   ACTIVE
   SUSPENDED
-  INACTIVE
+  CANCELLED
+}
+
+enum PlanType {
+  BASIC
+  PRO
+  ENTERPRISE
 }
 
 enum InstanceStatus {
+  CREATED
+  CONNECTING
   CONNECTED
   DISCONNECTED
-  CONNECTING
   ERROR
 }
 
+enum BotType {
+  TYPEBOT
+  OPENAI
+}
+
+enum SessionStatus {
+  ACTIVE
+  ENDED
+  EXPIRED
+}
+
+enum MessageType {
+  TEXT
+  MEDIA
+  AUDIO
+  DOCUMENT
+  LOCATION
+  CONTACT
+  STICKER
+  REACTION
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum QuotaType {
+  MESSAGES_HOURLY
+  MESSAGES_DAILY
+  MESSAGES_MONTHLY
+  INSTANCES
+  BOTS
+  API_CALLS
+}
+
 enum MessageStatus {
-  PENDING
   SENT
   DELIVERED
   READ
   FAILED
 }
 
-enum MessageType {
-  TEXT
-  IMAGE
-  AUDIO
-  VIDEO
-  DOCUMENT
-  LOCATION
-  CONTACT
-  STICKER
+enum BillingStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+```
+
+### **Core Models - User & Tenant Management**
+```prisma
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  avatar    String?
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  sessions  Session[]
+  apiKeys   ApiKey[]
+  auditLogs AuditLog[]
+
+  // Better Auth fields
+  emailVerified Boolean
+  image         String?
+  accounts      Account[]
+
+  @@map("users")
 }
 
-enum BotStatus {
-  ACTIVE
-  INACTIVE
-  PAUSED
-}
-
-enum WebhookEventType {
-  MESSAGE_RECEIVED
-  MESSAGE_SENT
-  MESSAGE_STATUS_UPDATE
-  INSTANCE_STATUS_UPDATE
-  CONNECTION_UPDATE
-}
-
-// Core Models
 model Tenant {
   id        String       @id @default(cuid())
   name      String
   slug      String       @unique
-  plan      String       @default("BASIC")
+  domain    String?      @unique
+  plan      PlanType     @default(BASIC)
   status    TenantStatus @default(ACTIVE)
   settings  Json?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
   // Relations
-  users     User[]
-  instances Instance[]
-  messages  Message[]
-  contacts  Contact[]
-  bots      Bot[]
-  apiKeys   ApiKey[]
-  quotas    Quota[]
-  webhooks  Webhook[]
+  users       User[]
+  instances   Instance[]
+  bots        Bot[]
+  apiKeys     ApiKey[]
+  quotaUsage  QuotaUsage[]
+  messageLogs MessageLog[]
+  auditLogs   AuditLog[]
+  billing     Billing[]
 
   @@map("tenants")
 }
+```
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  avatar    String?
-  role      UserRole @default(USER)
-  isActive  Boolean  @default(true)
-  lastLogin DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  tenantId  String
-  sessions  Session[]
-  apiKeys   ApiKey[]
-  messages  Message[]
-
-  @@map("users")
-}
-
+### **Authentication Models (Better Auth Integration)**
+```prisma
 model Session {
   id        String   @id @default(cuid())
   token     String   @unique
+  userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  // Relations
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
 
   @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
 }
 
 model ApiKey {
   id         String    @id @default(cuid())
   name       String
   key        String    @unique
-  scopes     String[]
+  scopes     String[] // e.g., ["messages:send", "instances:read"]
   isActive   Boolean   @default(true)
   lastUsedAt DateTime?
   expiresAt  DateTime?
@@ -649,30 +996,529 @@ model ApiKey {
   updatedAt  DateTime  @updatedAt
 
   // Relations
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   String
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
 
   @@map("api_keys")
 }
+```
 
+### **WhatsApp Instance Management**
+```prisma
 model Instance {
-  id           String         @id @default(cuid())
-  name         String
-  instanceKey  String         @unique
-  qrCode       String?
-  status       InstanceStatus @default(DISCONNECTED)
-  phoneNumber  String?
-  profileName  String?
-  settings     Json?
-  isActive     Boolean        @default(true)
-  lastSeen     DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id                  String         @id @default(cuid())
+  name                String
+  evolutionKey        String         @unique
+  evolutionInstanceId String         @unique
+  phoneNumber         String?
+  status              InstanceStatus @default(CREATED)
+  qrCode              String?
+  settings            Json?
+  webhookUrl          String?
+  isActive            Boolean        @default(true)
+  lastConnectedAt     DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   // Relations
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  bots        Bot[]
+  messageLogs MessageLog[]
+
+  @@map("instances")
+}
+```
+
+### **Bot Management System**
+```prisma
+model Bot {
+  id             String   @id @default(cuid())
+  name           String
+  type           BotType
+  evolutionBotId String?  @unique
+  config         Json
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId   String
+  instance   Instance     @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  instanceId String
+  sessions   BotSession[]
+
+  @@map("bots")
+}
+
+model BotSession {
+  id          String        @id @default(cuid())
+  sessionId   String        @unique
+  phoneNumber String
+  status      SessionStatus @default(ACTIVE)
+  context     Json?
+  startedAt   DateTime      @default(now())
+  endedAt     DateTime?
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  bot      Bot          @relation(fields: [botId], references: [id], onDelete: Cascade)
+  botId    String
+  messages BotMessage[]
+
+  @@map("bot_sessions")
+}
+
+model BotMessage {
+  id        String           @id @default(cuid())
+  messageId String
+  content   String
+  type      MessageType
+  direction MessageDirection
+  createdAt DateTime         @default(now())
+
+  // Relations
+  session   BotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+
+  @@map("bot_messages")
+}
+```
+
+### **Quota & Usage Management**
+```prisma
+model QuotaUsage {
+  id        String    @id @default(cuid())
+  quotaType QuotaType
+  period    String // e.g., "2024-01", "2024-01-15", "2024-01-15-14"
+  used      Int       @default(0)
+  limit     Int
+  resetAt   DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  @@unique([tenantId, quotaType, period])
+  @@map("quota_usage")
+}
+```
+
+### **Message Logging & Billing**
+```prisma
+model MessageLog {
+  id          String        @id @default(cuid())
+  messageId   String?
+  endpoint    String
+  method      String
+  status      MessageStatus
+  phoneNumber String?
+  content     String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId   String
+  instance   Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  instanceId String
+
+  @@map("message_logs")
+}
+
+model Billing {
+  id          String        @id @default(cuid())
+  period      String // e.g., "2024-01"
+  plan        PlanType
+  baseAmount  Decimal       @db.Decimal(10, 2)
+  usageAmount Decimal       @db.Decimal(10, 2)
+  totalAmount Decimal       @db.Decimal(10, 2)
+  status      BillingStatus @default(PENDING)
+  paidAt      DateTime?
+  dueAt       DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  @@unique([tenantId, period])
+  @@map("billing")
+}
+```
+
+### **Audit Logging**
+```prisma
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  resource   String
+  resourceId String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+
+  @@map("audit_logs")
+}
+```
+
+### **Database Features & Optimizations**
+
+#### **Multi-Tenant Isolation**
+- Semua model menggunakan `tenantId` untuk isolasi data
+- Cascade deletion untuk data cleanup
+- Row-level security melalui Prisma middleware
+
+#### **Indexing Strategy**
+- Unique indexes: `email`, `slug`, `evolutionInstanceId`
+- Composite indexes: `tenantId_quotaType_period`
+- Foreign key indexes untuk optimal joins
+
+#### **Data Types & Constraints**
+- `cuid()` untuk primary keys
+- `Json` fields untuk flexible configuration
+- `Decimal` untuk monetary values
+- Proper enum constraints
+
+#### **Prisma Client Configuration**
+```typescript
+// src/lib/prisma.ts
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+```
+
+### **Database Scripts & Commands**
+
+#### **Development Commands**
+```bash
+# Generate Prisma client
+npm run db:generate
+
+# Push schema changes to database
+npm run db:push
+
+# Create migration
+npm run db:migrate
+
+# Reset database
+npm run db:reset
+
+# Seed database
+npm run db:seed
+
+# Open Prisma Studio
+npm run db:studio
+```
+
+#### **Production Commands**
+```bash
+# Deploy migrations
+npm run db:migrate:deploy
+```
+
+### **Database Seeding**
+
+File `prisma/seed.ts` membuat data demo lengkap:
+- **Default Tenant** dengan plan PRO
+- **Admin User** (`admin@zapin.tech` / `admin123`)
+- **Demo User** (`demo@zapin.tech` / `demo123`)
+- **API Key** untuk testing
+- **Sample Instance** WhatsApp
+- **Quota Usage** records
+- **Message Logs** contoh
+
+### **Environment Configuration**
+```env
+# Database Configuration
+DATABASE_URL="postgresql://zapin:password@localhost:5432/zapin_db"
+REDIS_URL="redis://localhost:6379"
+
+# Better Auth
+JWT_SECRET="your-super-secret-jwt-key-minimum-32-characters-long"
+NEXTAUTH_SECRET="your-nextauth-secret-key"
+NEXTAUTH_URL="http://localhost:8080"
+```
+
+## 🔐 AUTHENTICATION SYSTEM
+
+### **Better Auth Integration**
+
+Zapin menggunakan **Better Auth** sebagai sistem autentikasi utama yang terintegrasi dengan Prisma. Better Auth menyediakan:
+
+- **Multi-Provider Authentication** - Email/Password, OAuth (Google, GitHub, Facebook)
+- **Session Management** - JWT-based sessions dengan refresh tokens
+- **Account Linking** - Multiple providers per user
+- **Email Verification** - Secure email verification flow
+- **Password Reset** - Secure password reset dengan tokens
+- **Type Safety** - Full TypeScript support
+
+### **Authentication Configuration**
+
+```typescript
+// src/lib/auth.ts
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { prisma } from "./prisma";
+
+export const auth = betterAuth({
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+  },
+  socialProviders: {
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+  },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+  },
+});
+
+export type Session = typeof auth.$Infer.Session;
+export type User = typeof auth.$Infer.User;
+```
+
+### **Authentication Models**
+
+Better Auth menggunakan model database berikut:
+
+#### **User Model**
+- `id` - Primary key
+- `email` - Unique email address
+- `emailVerified` - Email verification status
+- `name` - User display name
+- `image` - Profile image URL
+- `createdAt` / `updatedAt` - Timestamps
+
+#### **Account Model**
+- `id` - Primary key
+- `accountId` - Provider account ID
+- `providerId` - OAuth provider (google, github, etc.)
+- `userId` - Foreign key to User
+- `accessToken` / `refreshToken` - OAuth tokens
+- `expiresAt` - Token expiration
+
+#### **Session Model**
+- `id` - Primary key
+- `token` - Session token
+- `userId` - Foreign key to User
+- `expiresAt` - Session expiration
+- `ipAddress` / `userAgent` - Security tracking
+
+#### **Verification Model**
+- `id` - Primary key
+- `identifier` - Email or phone
+- `value` - Verification token
+- `expiresAt` - Token expiration
+
+### **API Key Authentication**
+
+Selain Better Auth, Zapin juga mendukung API Key authentication untuk programmatic access:
+
+```typescript
+// API Key Model
+model ApiKey {
+  id         String    @id @default(cuid())
+  name       String    // Human-readable name
+  key        String    @unique // Hashed API key
+  scopes     String[]  // Permissions array
+  isActive   Boolean   @default(true)
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+
+  @@map("api_keys")
+}
+```
+
+### **Authentication Middleware**
+
+```typescript
+// src/api/middleware/auth.ts
+import { FastifyRequest, FastifyReply } from 'fastify';
+import { auth } from '../../lib/auth';
+import { prisma } from '../../lib/prisma';
+
+export async function authMiddleware(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const authHeader = request.headers.authorization;
+  
+  if (!authHeader) {
+    return reply.status(401).send({ error: 'Authorization header required' });
+  }
+
+  // Check for Bearer token (Better Auth)
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const session = await auth.api.getSession({ headers: { authorization: `Bearer ${token}` } });
+    
+    if (!session) {
+      return reply.status(401).send({ error: 'Invalid session token' });
+    }
+    
+    request.user = session.user;
+    request.session = session.session;
+  }
+  
+  // Check for API Key
+  else if (authHeader.startsWith('ApiKey ')) {
+    const apiKey = authHeader.substring(7);
+    const key = await prisma.apiKey.findUnique({
+      where: { key: apiKey, isActive: true },
+      include: { user: true, tenant: true }
+    });
+    
+    if (!key || (key.expiresAt && key.expiresAt < new Date())) {
+      return reply.status(401).send({ error: 'Invalid or expired API key' });
+    }
+    
+    // Update last used timestamp
+    await prisma.apiKey.update({
+      where: { id: key.id },
+      data: { lastUsedAt: new Date() }
+    });
+    
+    request.user = key.user;
+    request.apiKey = key;
+  }
+  
+  else {
+    return reply.status(401).send({ error: 'Invalid authorization format' });
+  }
+}
+```
+
+### **Role-Based Access Control (RBAC)**
+
+```typescript
+// src/lib/permissions.ts
+export enum Permission {
+  // User Management
+  USER_CREATE = 'user:create',
+  USER_READ = 'user:read',
+  USER_UPDATE = 'user:update',
+  USER_DELETE = 'user:delete',
+  
+  // Instance Management
+  INSTANCE_CREATE = 'instance:create',
+  INSTANCE_READ = 'instance:read',
+  INSTANCE_UPDATE = 'instance:update',
+  INSTANCE_DELETE = 'instance:delete',
+  
+  // Message Operations
+  MESSAGE_SEND = 'message:send',
+  MESSAGE_READ = 'message:read',
+  
+  // Bot Management
+  BOT_CREATE = 'bot:create',
+  BOT_READ = 'bot:read',
+  BOT_UPDATE = 'bot:update',
+  BOT_DELETE = 'bot:delete',
+  
+  // Admin Operations
+  TENANT_MANAGE = 'tenant:manage',
+  BILLING_MANAGE = 'billing:manage',
+  AUDIT_READ = 'audit:read',
+}
+
+export const ROLE_PERMISSIONS = {
+  [UserRole.ADMIN]: [
+    Permission.USER_CREATE,
+    Permission.USER_READ,
+    Permission.USER_UPDATE,
+    Permission.USER_DELETE,
+    Permission.INSTANCE_CREATE,
+    Permission.INSTANCE_READ,
+    Permission.INSTANCE_UPDATE,
+    Permission.INSTANCE_DELETE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_READ,
+    Permission.BOT_CREATE,
+    Permission.BOT_READ,
+    Permission.BOT_UPDATE,
+    Permission.BOT_DELETE,
+    Permission.TENANT_MANAGE,
+    Permission.BILLING_MANAGE,
+    Permission.AUDIT_READ,
+  ],
+  [UserRole.USER]: [
+    Permission.INSTANCE_READ,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_READ,
+    Permission.BOT_READ,
+  ],
+};
+
+export function hasPermission(userRole: UserRole, permission: Permission): boolean {
+  return ROLE_PERMISSIONS[userRole]?.includes(permission) ?? false;
+}
+```
+
+### **Security Features**
+
+#### **Password Security**
+- **bcrypt hashing** dengan salt rounds 12
+- **Password strength validation**
+- **Password history** untuk mencegah reuse
+
+#### **Session Security**
+- **JWT tokens** dengan expiration
+- **Refresh token rotation**
+- **IP address tracking**
+- **User agent validation**
+- **Concurrent session limits**
+
+#### **API Key Security**
+- **Scoped permissions** per API key
+- **Expiration dates**
+- **Usage tracking**
+- **Rate limiting** per key
+- **Secure key generation** dengan crypto.randomBytes
+
+#### **Multi-Tenant Security**
+- **Tenant isolation** di semua queries
+- **Cross-tenant access prevention**
+- **Tenant-specific API keys**
+- **Resource ownership validation**
   tenantId String
   messages Message[]
   bots     Bot[]
@@ -837,77 +1683,901 @@ model MessageAnalytics {
 ## 🔐 AUTHENTICATION SYSTEM
 
 ### **Authentication Architecture**
-The Zapin Enterprise platform implements a comprehensive dual authentication system:
+The Zapin Enterprise platform implements a comprehensive authentication system powered by Better Auth:
 
-1. **JWT-based Authentication**: For web application access
-2. **API Key Authentication**: For programmatic API access
-3. **Multi-tenant Isolation**: Ensures complete data separation between tenants
-4. **Role-based Access Control**: ADMIN and USER roles with different permissions
+1. **Better Auth Integration**: Modern, secure authentication with built-in session management
+2. **Email & Password Authentication**: Secure login with bcrypt password hashing
+3. **Social Authentication**: Support for GitHub, Google, and Facebook OAuth
+4. **API Key Authentication**: For programmatic API access
+5. **Multi-tenant Isolation**: Ensures complete data separation between tenants
+6. **Role-based Access Control**: ADMIN and USER roles with different permissions
+7. **Session Management**: Automatic session handling with configurable expiration
 
 ### **Authentication Flow**
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Client    │    │  Next.js    │    │  Fastify    │
-│ Application │    │   Frontend  │    │  API Server │
+│   Client    │    │  Next.js    │    │ Better Auth │
+│ Application │    │   Frontend  │    │   Server    │
 └─────────────┘    └─────────────┘    └─────────────┘
        │                   │                   │
        │ 1. Login Request  │                   │
        ├──────────────────►│                   │
-       │                   │ 2. Validate       │
+       │                   │ 2. Auth Request   │
        │                   ├──────────────────►│
-       │                   │ 3. JWT + User     │
+       │                   │ 3. Session + User │
        │                   │◄──────────────────┤
-       │ 4. Store Token    │                   │
+       │ 4. Set Cookies    │                   │
        │◄──────────────────┤                   │
        │                   │                   │
        │ 5. API Requests   │                   │
        ├──────────────────────────────────────►│
-       │ 6. Verify JWT     │                   │
+       │ 6. Verify Session │                   │
        │◄──────────────────────────────────────┤
+```
+
+### **Better Auth Configuration (src/lib/auth.ts)**
+```typescript
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+
+const prisma = new PrismaClient();
+
+export const auth = betterAuth({
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+  emailAndPassword: {
+    enabled: true,
+    password: {
+      hash: async (password: string) => {
+        return await bcrypt.hash(password, 12);
+      },
+      verify: async ({ password, hash }: { password: string; hash: string }) => {
+        return await bcrypt.compare(password, hash);
+      },
+    },
+  },
+  socialProviders: {
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID as string,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+    },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+    facebook: {
+      clientId: process.env.FACEBOOK_CLIENT_ID as string,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
+    },
+  },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+  },
+  user: {
+    additionalFields: {
+      tenantId: {
+        type: "string",
+        required: true,
+      },
+      role: {
+        type: "string",
+        required: true,
+        defaultValue: "USER",
+      },
+    },
+  },
+});
+
+export type Session = typeof auth.$Infer.Session;
+export type User = typeof auth.$Infer.Session.user;
+```
+
+### **Client-side Auth Configuration (src/lib/auth-client.ts)**
+```typescript
+'use client';
+
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:8080",
+});
+
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  tenantId: string;
+  role: string;
+  emailVerified: boolean;
+  image?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type Session = {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+  token: string;
+  ipAddress?: string;
+  userAgent?: string;
+};
 ```
 
 ### **Login Form Component (src/components/auth/LoginForm.tsx)**
 ```typescript
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth, useFormValidation } from '../../hooks/useAuth';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import { Divider } from '@tremor/react';
+import { Button } from '@/components/ui/Button';
+import { TremorInput } from '@/components/ui/TremorInput';
+import { GitHubIcon, GoogleIcon, FacebookIcon } from '@/components/ui/SocialIcons';
+import { Loader2 } from 'lucide-react';
 
-export function LoginForm() {
+export default function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { login, loading } = useAuth();
-  const { errors, validateField, clearErrors, hasErrors } = useFormValidation();
-  
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-  const [redirectTo, setRedirectTo] = useState('/dashboard');
 
-  // Get redirect parameter from URL
-  useEffect(() => {
-    const redirect = searchParams.get('redirect');
-    if (redirect) {
-      setRedirectTo(decodeURIComponent(redirect));
-    }
-  }, [searchParams]);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    clearErrors(field);
-    setSubmitError('');
+    try {
+       const result = await authClient.signIn.email({
+         email,
+         password,
+       });
+
+       if (result.error) {
+         setError(result.error.message || 'Login failed');
+       } else {
+         router.push('/dashboard');
+       }
+     } catch (err) {
+       setError('An unexpected error occurred');
+     } finally {
+       setIsLoading(false);
+     }
   };
+
+  const handleSocialLogin = async (provider: 'github' | 'google' | 'facebook') => {
+    try {
+      await authClient.signIn.social({
+        provider,
+        callbackURL: '/dashboard',
+      });
+    } catch (err) {
+      setError(`Failed to sign in with ${provider}`);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+        <div className="rounded-lg bg-white p-8 shadow-lg dark:bg-gray-900">
+        <h3 className="text-center text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
+          Log in or create account
+        </h3>
+        
+        {error && (
+          <div className="mt-4 rounded-tremor-default bg-red-50 p-3 text-center text-tremor-default text-red-800 dark:bg-red-900/20 dark:text-red-200">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong"
+            >
+              Email
+            </label>
+            <TremorInput
+              type="email"
+              id="email"
+              name="email"
+              autoComplete="email"
+              placeholder="john@company.com"
+              className="mt-2"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="password"
+              className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong"
+            >
+              Password
+            </label>
+            <TremorInput
+              type="password"
+              id="password"
+              name="password"
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              className="mt-2"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              'Sign in'
+            )}
+          </Button>
+        </form>
+        
+        <Divider className="my-6">or continue with</Divider>
+        
+        <div className="grid grid-cols-3 gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => handleSocialLogin('github')}
+            className="w-full"
+          >
+            <GitHubIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => handleSocialLogin('google')}
+            className="w-full"
+          >
+            <GoogleIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => handleSocialLogin('facebook')}
+            className="w-full"
+          >
+            <FacebookIcon className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <p className="mt-6 text-center text-tremor-default text-tremor-content dark:text-dark-tremor-content">
+          Don't have an account?{' '}
+          <Link
+            href="/register"
+            className="font-medium text-tremor-brand hover:text-tremor-brand-emphasis dark:text-dark-tremor-brand dark:hover:text-dark-tremor-brand-emphasis"
+          >
+            Sign up
+          </Link>
+        </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### **Register Form Component (src/components/auth/RegisterForm.tsx)**
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { authClient } from '@/lib/auth-client';
+import { useAuth } from '@/hooks/useAuth';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { Divider } from '@tremor/react';
+import { Button } from '@/components/ui/Button';
+import { TremorInput } from '@/components/ui/TremorInput';
+import { GitHubIcon, GoogleIcon, FacebookIcon } from '@/components/ui/SocialIcons';
+import { Loader2 } from 'lucide-react';
+
+interface RegisterFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  tenantName: string;
+}
+
+export default function RegisterForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
+  const { register } = useAuth();
+  
+  const {
+    formData,
+    errors,
+    handleInputChange,
+    validateField,
+    hasErrors,
+  } = useFormValidation<RegisterFormData>({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    tenantName: '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    // Validate all fields
+    const nameValid = validateField('name', formData.name, {
+      required: true,
+      minLength: 2,
+    });
+    
+    const emailValid = validateField('email', formData.email, {
+      required: true,
+      email: true,
+    });
+    
+    const passwordValid = validateField('password', formData.password, {
+      required: true,
+      minLength: 8,
+    });
+    
+    const confirmPasswordValid = validateField('confirmPassword', formData.confirmPassword, {
+      required: true,
+      match: formData.password,
+    });
+    
+    const tenantNameValid = validateField('tenantName', formData.tenantName, {
+      required: true,
+      minLength: 2,
+    });
+
+    if (!nameValid || !emailValid || !passwordValid || !confirmPasswordValid || !tenantNameValid) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await register(formData.email, formData.password, formData.name, formData.tenantName);
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider: 'github' | 'google' | 'facebook') => {
+    try {
+      await authClient.signIn.social({
+        provider,
+        callbackURL: '/dashboard',
+      });
+    } catch (err) {
+      setError(`Failed to sign in with ${provider}`);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+        <div className="rounded-lg bg-white p-8 shadow-lg dark:bg-gray-900">
+          <h3 className="text-center text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
+            Create your account
+          </h3>
+          
+          {error && (
+            <div className="mt-4 rounded-tremor-default bg-red-50 p-3 text-center text-tremor-default text-red-800 dark:bg-red-900/20 dark:text-red-200">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                Full Name
+              </label>
+              <TremorInput
+                type="text"
+                placeholder="John Doe"
+                className="mt-2"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                error={hasErrors('name')}
+                required
+              />
+              {hasErrors('name') && (
+                <div className="mt-1 text-sm text-red-600">
+                  {errors.name?.map((error, index) => (
+                    <div key={index}>{error}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <label className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                Email
+              </label>
+              <TremorInput
+                type="email"
+                placeholder="john@company.com"
+                className="mt-2"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                error={hasErrors('email')}
+                required
+              />
+              {hasErrors('email') && (
+                <div className="mt-1 text-sm text-red-600">
+                  {errors.email?.map((error, index) => (
+                    <div key={index}>{error}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <label className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                Password
+              </label>
+              <TremorInput
+                type="password"
+                placeholder="Enter your password"
+                className="mt-2"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                error={hasErrors('password')}
+                required
+              />
+              {hasErrors('password') && (
+                <div className="mt-1 text-sm text-red-600">
+                  {errors.password?.map((error, index) => (
+                    <div key={index}>{error}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <label className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                Confirm Password
+              </label>
+              <TremorInput
+                type="password"
+                placeholder="Confirm your password"
+                className="mt-2"
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                error={hasErrors('confirmPassword')}
+                required
+              />
+              {hasErrors('confirmPassword') && (
+                <div className="mt-1 text-sm text-red-600">
+                  {errors.confirmPassword?.map((error, index) => (
+                    <div key={index}>{error}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <label className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                Company/Tenant Name
+              </label>
+              <TremorInput
+                type="text"
+                placeholder="Your Company Name"
+                className="mt-2"
+                value={formData.tenantName}
+                onChange={(e) => handleInputChange('tenantName', e.target.value)}
+                error={hasErrors('tenantName')}
+                required
+              />
+              {hasErrors('tenantName') && (
+                <div className="mt-1 text-sm text-red-600">
+                  {errors.tenantName?.map((error, index) => (
+                    <div key={index}>{error}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                'Create account'
+              )}
+            </Button>
+          </form>
+          
+          <Divider className="my-6">or continue with</Divider>
+          
+          <div className="grid grid-cols-3 gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => handleSocialLogin('github')}
+              className="w-full"
+            >
+              <GitHubIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleSocialLogin('google')}
+              className="w-full"
+            >
+              <GoogleIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleSocialLogin('facebook')}
+              className="w-full"
+            >
+              <FacebookIcon className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <p className="mt-6 text-center text-tremor-default text-tremor-content dark:text-dark-tremor-content">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="font-medium text-tremor-brand hover:text-tremor-brand-emphasis dark:text-dark-tremor-brand dark:hover:text-dark-tremor-brand-emphasis"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### **useAuth Hook (src/hooks/useAuth.tsx)**
+```typescript
+'use client';
+
+import { authClient, type User } from '@/lib/auth-client';
+import { createContext, useContext, type ReactNode } from 'react';
+
+type AuthContextType = {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string, tenantName: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+  isAuthenticated: boolean;
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const { data: session, isPending: loading } = authClient.useSession();
+  
+  const login = async (email: string, password: string) => {
+    const result = await authClient.signIn.email({
+      email,
+      password,
+    });
+    
+    if (result.error) {
+      throw new Error(result.error.message || 'Login failed');
+    }
+  };
+  
+  const register = async (email: string, password: string, name: string, tenantName: string) => {
+    const result = await authClient.signUp.email({
+      email,
+      password,
+      name,
+      // Additional fields for tenant creation
+      callbackURL: '/dashboard',
+    });
+    
+    if (result.error) {
+      throw new Error(result.error.message || 'Registration failed');
+    }
+  };
+  
+  const logout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = '/login';
+        },
+      },
+    });
+  };
+  
+  const refreshUser = async () => {
+    // Session will be automatically refreshed by Better Auth
+    // This function is kept for compatibility
+  };
+  
+  const value = {
+    user: session?.user || null,
+    loading,
+    login,
+    register,
+    logout,
+    refreshUser,
+    isAuthenticated: !!session?.user,
+  };
+  
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+```
+
+### **Authentication Middleware & Security**
+
+#### **Next.js Middleware (middleware.ts)**
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Public routes that don't require authentication
+  const publicRoutes = ['/login', '/register', '/api/health', '/'];
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
+  
+  // Check authentication for protected routes
+  try {
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+    
+    if (!session) {
+      // Redirect to login if not authenticated
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    
+    // Add user info to headers for API routes
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-user-id', session.user.id);
+    requestHeaders.set('x-tenant-id', session.user.tenantId || '');
+    requestHeaders.set('x-user-role', session.user.role || 'USER');
+    
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api/auth (auth API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
+  ],
+};
+```
+
+#### **API Route Protection**
+```typescript
+// src/app/api/protected/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // Access user data
+    const { user } = session;
+    
+    return NextResponse.json({
+      message: 'Protected data',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        tenantId: user.tenantId,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('API protection error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+#### **Client-side Route Protection**
+```typescript
+// src/components/auth/AuthGuard.tsx
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
+
+interface AuthGuardProps {
+  children: React.ReactNode;
+  requireAuth?: boolean;
+  requiredRole?: 'ADMIN' | 'USER';
+  fallback?: React.ReactNode;
+}
+
+export function AuthGuard({ 
+  children, 
+  requireAuth = true, 
+  requiredRole,
+  fallback 
+}: AuthGuardProps) {
+  const { user, loading, isAuthenticated } = useAuth();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (!loading && requireAuth && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [loading, requireAuth, isAuthenticated, router]);
+  
+  // Show loading state
+  if (loading) {
+    return fallback || (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+  
+  // Check authentication requirement
+  if (requireAuth && !isAuthenticated) {
+    return null; // Will redirect via useEffect
+  }
+  
+  // Check role requirement
+  if (requiredRole && user?.role !== requiredRole) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Access Denied
+          </h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            You don't have permission to access this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  
+  return <>{children}</>;
+}
+```
+
+### **Security Features**
+
+#### **Password Security**
+- **bcryptjs Hashing**: Passwords are hashed with salt rounds of 12
+- **Minimum Requirements**: 8+ characters (configurable)
+- **Password Validation**: Client and server-side validation
+
+#### **Session Security**
+- **Secure Cookies**: HttpOnly, Secure, SameSite attributes
+- **Session Expiration**: 7-day expiration with 1-day refresh
+- **Automatic Cleanup**: Expired sessions are automatically removed
+
+#### **CSRF Protection**
+- **Built-in Protection**: Better Auth includes CSRF protection
+- **Token Validation**: All state-changing requests require valid tokens
+
+#### **Rate Limiting**
+```typescript
+// Example rate limiting for auth endpoints
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, '1 m'), // 5 requests per minute
+});
+
+export async function rateLimitAuth(identifier: string) {
+  const { success, limit, reset, remaining } = await ratelimit.limit(identifier);
+  
+  if (!success) {
+    throw new Error('Too many authentication attempts. Please try again later.');
+  }
+  
+  return { limit, reset, remaining };
+}
+```
+
+#### **Environment Variables**
+```bash
+# Better Auth Configuration
+BETTER_AUTH_SECRET=your-secret-key-here
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+
+# Social OAuth Providers
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+FACEBOOK_CLIENT_ID=your-facebook-client-id
+FACEBOOK_CLIENT_SECRET=your-facebook-client-secret
+
+# Database
+DATABASE_URL=postgresql://username:password@localhost:5432/zapin
+
+# Rate Limiting (Optional)
+UPSTASH_REDIS_REST_URL=your-upstash-redis-url
+UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
+```
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

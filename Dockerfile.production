@@ -77,7 +77,7 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ENV PORT=8080
 ENV API_PORT=3001
 
 # Create necessary directories with proper permissions
@@ -130,7 +130,7 @@ RUN chmod +x /app/start.sh
 USER nextjs
 
 # Expose ports
-EXPOSE 3000 3001
+EXPOSE 8080 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

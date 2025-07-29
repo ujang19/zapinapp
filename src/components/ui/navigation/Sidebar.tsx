@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation"
 import MobileSidebar from "./MobileSidebar"
 import { UserProfileDesktop, UserProfileMobile } from "./UserProfile"
 import { Tooltip } from "@/components/tremor/Tooltip"
+import { Logo } from "@/components/ui/Logo"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: BarChartBig },
@@ -71,9 +72,29 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
       >
         <aside className="flex grow flex-col gap-y-4 overflow-hidden whitespace-nowrap px-3 py-4">
           <div>
-            <div className="flex items-center gap-x-1.5">
+            {/* Logo and Brand */}
+            <div className="flex items-center gap-x-2 mb-4">
+              <div className="flex items-center gap-x-2">
+                <Logo 
+                  width={isCollapsed ? 32 : 40} 
+                  height={isCollapsed ? 32 : 40}
+                  className="transition-all duration-200 shrink-0"
+                  onClick={toggleSidebar}
+                  isCollapsed={isCollapsed}
+                />
+                <Link href="/dashboard">
+                  <span
+                    className={cx(
+                      "text-lg font-semibold text-gray-900 transition-opacity dark:text-gray-50",
+                      isCollapsed ? "opacity-0 w-0" : "opacity-100",
+                    )}
+                  >
+                    Zapin
+                  </span>
+                </Link>
+              </div>
               <button
-                className="group inline-flex rounded-md p-2 hover:bg-gray-200/50 hover:dark:bg-gray-900"
+                className="group inline-flex rounded-md p-2 hover:bg-gray-200/50 hover:dark:bg-gray-900 ml-auto"
                 onClick={toggleSidebar}
               >
                 {isCollapsed ? (
@@ -88,16 +109,6 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
                   />
                 )}
               </button>
-              <span
-                className={cx(
-                  "text-sm font-semibold text-gray-900 transition-opacity dark:text-gray-50",
-                  isCollapsed ? "opacity-0" : "opacity-100",
-                )}
-              >
-                <a aria-label="Home Link" href="/dashboard">
-                  Zapin
-                </a>
-              </span>
             </div>
           </div>
           <nav

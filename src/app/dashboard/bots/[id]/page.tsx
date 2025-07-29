@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Bot, Settings, Play, Pause, TestTube, BarChart3, MessageSquare, Clock, Users, Zap, Brain } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -310,14 +310,14 @@ export default function BotDetailPage() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => router.push(`/dashboard/bots/${bot.id}/analytics`)}
           >
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
           </Button>
           <Button
-            variant={bot.isActive ? 'destructive' : 'default'}
+            variant={bot.isActive ? 'destructive' : 'primary'}
             onClick={toggleBotStatus}
           >
             {bot.isActive ? (
@@ -346,13 +346,13 @@ export default function BotDetailPage() {
               </div>
               <div className="flex items-center gap-2">
                 {!editMode ? (
-                  <Button variant="outline" onClick={() => setEditMode(true)}>
+                  <Button variant="secondary" onClick={() => setEditMode(true)}>
                     <Settings className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
                 ) : (
                   <>
-                    <Button variant="outline" onClick={() => setEditMode(false)}>
+                    <Button variant="secondary" onClick={() => setEditMode(false)}>
                       Cancel
                     </Button>
                     <Button onClick={handleSave} disabled={saving}>

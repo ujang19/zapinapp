@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Bot, Brain, MessageSquare, Settings, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -445,7 +445,7 @@ export default function CreateBotPage() {
       </div>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => setStep(1)}>
+        <Button variant="secondary" onClick={() => setStep(1)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
@@ -597,7 +597,7 @@ export default function CreateBotPage() {
       </div>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => setStep(1)}>
+        <Button variant="secondary" onClick={() => setStep(1)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
@@ -736,7 +736,7 @@ export default function CreateBotPage() {
         </div>
 
         <div className="flex justify-between">
-          <Button variant="outline" onClick={() => setStep(2)}>
+          <Button variant="secondary" onClick={() => setStep(2)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>

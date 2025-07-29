@@ -1,7 +1,7 @@
 'use client';
 
 import { Bot, Settings, Play, Pause, Trash2, BarChart3, Zap, Brain } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -111,7 +111,7 @@ export function BotCard({ bot, onEdit, onAnalytics, onToggleStatus, onDelete }: 
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
-              size="sm"
+
               onClick={() => onEdit(bot.id)}
               title="Edit bot"
             >
@@ -119,7 +119,7 @@ export function BotCard({ bot, onEdit, onAnalytics, onToggleStatus, onDelete }: 
             </Button>
             <Button
               variant="ghost"
-              size="sm"
+
               onClick={() => onAnalytics(bot.id)}
               title="View analytics"
             >
@@ -127,7 +127,7 @@ export function BotCard({ bot, onEdit, onAnalytics, onToggleStatus, onDelete }: 
             </Button>
             <Button
               variant="ghost"
-              size="sm"
+
               onClick={() => onToggleStatus(bot.id, bot.isActive)}
               title={bot.isActive ? 'Disable bot' : 'Enable bot'}
             >
@@ -139,7 +139,7 @@ export function BotCard({ bot, onEdit, onAnalytics, onToggleStatus, onDelete }: 
             </Button>
             <Button
               variant="ghost"
-              size="sm"
+
               onClick={() => onDelete(bot.id, bot.name)}
               title="Delete bot"
             >

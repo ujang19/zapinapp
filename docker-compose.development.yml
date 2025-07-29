@@ -10,7 +10,7 @@ services:
     container_name: zapin-app-dev
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8080:8080"
       - "3001:3001"
       - "9229:9229"  # Node.js debugger
     environment:
@@ -21,7 +21,7 @@ services:
       - EVOLUTION_API_BASE_URL=${EVOLUTION_API_BASE_URL:-https://core.zapin.tech/v2}
       - EVOLUTION_GLOBAL_API_KEY=${EVOLUTION_GLOBAL_API_KEY:-dev-evolution-key}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-dev-nextauth-secret}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:8080}
       - LOG_LEVEL=debug
       - DEBUG=zapin:*
       - WEBHOOK_BASE_URL=http://localhost:3001

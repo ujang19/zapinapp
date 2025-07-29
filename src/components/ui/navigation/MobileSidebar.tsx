@@ -8,11 +8,19 @@ import {
   Settings2,
   Table2,
   Users,
-  X,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { Logo } from "@/components/ui/Logo"
+import {
+  Drawer,
+  DrawerBody,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/Drawer"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: BarChartBig },
@@ -44,7 +52,6 @@ const navigation = [
 ] as const
 
 export default function MobileSidebar() {
-  const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
 
   const isActive = (itemHref: string) => {
@@ -56,81 +63,70 @@ export default function MobileSidebar() {
 
   return (
     <>
-      <button
-        className={cx(
-          "inline-flex items-center rounded-md p-2 text-sm font-medium transition hover:bg-gray-200/50 hover:dark:bg-gray-900",
-          "text-gray-700 dark:text-gray-300",
-          focusRing,
-        )}
-        onClick={() => setIsOpen(true)}
-      >
-        <Menu className="h-5 w-5" />
-      </button>
-
-      {/* Mobile menu overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-gray-600 bg-opacity-75"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Sidebar */}
-          <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg dark:bg-gray-950">
-            <div className="flex h-full flex-col">
-              {/* Header */}
-              <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
-                <span className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                  Zapin
-                </span>
-                <button
+      <Drawer>
+        <DrawerTrigger asChild>
+          <button
+            className={cx(
+              "inline-flex items-center rounded-md p-2 text-sm font-medium transition hover:bg-gray-200/50 hover:dark:bg-gray-900",
+              "text-gray-700 dark:text-gray-300",
+              focusRing,
+            )}
+            aria-label="open sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </DrawerTrigger>
+        <DrawerContent className="sm:max-w-lg">
+          <DrawerHeader>
+            <DrawerTitle className="flex items-center gap-2">
+              <Logo width={32} height={32} />
+              <span className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Zapin
+              </span>
+            </DrawerTitle>
+          </DrawerHeader>
+          <DrawerBody>
+            <nav
+              aria-label="core mobile navigation links"
+              className="flex flex-1 flex-col space-y-10"
+            >
+              <div>
+                <span
                   className={cx(
-                    "inline-flex items-center rounded-md p-2 text-sm font-medium transition hover:bg-gray-200/50 hover:dark:bg-gray-900",
-                    "text-gray-700 dark:text-gray-300",
-                    focusRing,
+                    "block h-6 text-xs font-medium leading-6 text-gray-500 transition-opacity dark:text-gray-400",
                   )}
-                  onClick={() => setIsOpen(false)}
                 >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Navigation */}
-              <nav className="flex-1 px-4 py-6">
-                <div>
-                  <span className="block text-xs font-medium leading-6 text-gray-500 dark:text-gray-400">
-                    Platform
-                  </span>
-                  <ul role="list" className="mt-2 space-y-1">
-                    {navigation.map((item) => (
-                      <li key={item.name}>
+                  Platform
+                </span>
+                <ul role="list" className="mt-1 space-y-1.5">
+                  {navigation.map((item) => (
+                    <li key={item.name}>
+                      <DrawerClose asChild>
                         <Link
                           href={item.href}
                           className={cx(
                             isActive(item.href)
-                              ? "text-blue-600 dark:text-blue-500 bg-blue-50 dark:bg-blue-950/50"
-                              : "text-gray-700 dark:text-gray-300",
-                            "flex items-center gap-x-2.5 rounded-md p-2 text-sm font-medium transition hover:bg-gray-200/50 hover:dark:bg-gray-900",
+                              ? "text-blue-600 dark:text-blue-500"
+                              : "text-gray-600 hover:text-gray-900 dark:text-gray-400 hover:dark:text-gray-50",
+                            "flex items-center gap-x-2.5 rounded-md px-2 py-1.5 text-base font-medium transition hover:bg-gray-100 sm:text-sm hover:dark:bg-gray-900",
                             focusRing,
                           )}
-                          onClick={() => setIsOpen(false)}
                         >
                           <item.icon
-                            className="h-5 w-5 shrink-0"
+                            className="size-5 shrink-0"
                             aria-hidden="true"
                           />
                           {item.name}
                         </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </nav>
-            </div>
-          </div>
-        </div>
-      )}
+                      </DrawerClose>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </nav>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </>
   )
 }
