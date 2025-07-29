@@ -37,7 +37,7 @@
     "deploy:production": "./scripts/deploy.sh --production",
     "backup": "./scripts/db-management.sh backup",
     "restore": "./scripts/db-management.sh restore",
-    "health-check": "curl -f http://localhost:3000/api/health || exit 1",
+    "health-check": "curl -f http://localhost:8080/api/health || exit 1",
     "clean": "rm -rf dist .next node_modules/.cache",
     "postinstall": "prisma generate"
   },
@@ -57,7 +57,10 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-toast": "^1.2.14",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "@remixicon/react": "^4.6.0",
     "@tanstack/react-query": "^5.83.0",
+    "@tanstack/react-table": "^8.21.3",
     "@tremor/react": "^3.18.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.5",
@@ -84,6 +87,7 @@
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "tailwind-merge": "^3.3.1",
+    "tailwind-variants": "^2.0.1",
     "winston": "^3.11.0",
     "zod": "^3.22.4"
   },
