@@ -163,7 +163,7 @@ export class EvolutionService {
   private retryDelay: number = 1000;
 
   constructor() {
-    this.baseUrl = process.env.EVOLUTION_API_BASE_URL || 'https://core.zapin.tech/v2';
+    this.baseUrl = process.env.EVOLUTION_API_BASE_URL || 'https://core.zapin.tech';
     this.globalApiKey = process.env.EVOLUTION_GLOBAL_API_KEY || '';
     
     if (!this.globalApiKey) {

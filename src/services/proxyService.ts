@@ -988,7 +988,7 @@ export class ProxyService {
     method: string,
     body?: any
   ): Promise<any> {
-    const baseUrl = process.env.EVOLUTION_API_BASE_URL || 'https://core.zapin.tech/v2';
+    const baseUrl = process.env.EVOLUTION_API_BASE_URL || 'https://core.zapin.tech';
     const globalApiKey = process.env.EVOLUTION_GLOBAL_API_KEY;
 
     if (!globalApiKey) {

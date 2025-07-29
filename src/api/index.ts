@@ -1,10 +1,10 @@
 import Fastify, { FastifyInstance } from 'fastify';
-// TODO: Install missing Fastify plugins
-// import cors from '@fastify/cors';
-// import helmet from '@fastify/helmet';
-// import rateLimit from '@fastify/rate-limit';
-// import swagger from '@fastify/swagger';
-// import swaggerUi from '@fastify/swagger-ui';
+// Import Fastify plugins
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import { prisma } from '../lib/prisma';
 import { redis } from '../lib/redis';
 
@@ -19,7 +19,7 @@ import { registerSwagger } from './docs/swagger';
 import { authMiddleware } from './middleware/auth';
 import { quotaMiddleware } from './middleware/quota';
 import { errorHandler } from './middleware/error';
-import { metricsMiddleware } from './middleware/metrics';
+import { metricsMiddleware, metricsOnSendHook } from './middleware/metrics';
 
 const PORT = parseInt(process.env.API_PORT || '3001');
 const HOST = process.env.HOST || '0.0.0.0';
@@ -43,33 +43,32 @@ async function buildApp(): Promise<FastifyInstance> {
   });
 
   // Register plugins
-  // TODO: Uncomment when Fastify plugins are installed
-  // await app.register(helmet, {
-  //   contentSecurityPolicy: false, // Disable for API
-  // });
+  await app.register(helmet, {
+    contentSecurityPolicy: false, // Disable for API
+  });
 
-  // await app.register(cors, {
-  //   origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
-  //   credentials: true,
-  //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  //   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  // });
+  await app.register(cors, {
+    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  });
 
-  // await app.register(rateLimit, {
-  //   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-  //   timeWindow: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'),
-  //   redis: redis,
-  //   keyGenerator: (request: any) => {
-  //     return request.ip || 'anonymous';
-  //   },
-  // });
+  await app.register(rateLimit, {
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+    timeWindow: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'),
+    redis: redis,
+    keyGenerator: (request: any) => {
+      return request.ip || 'anonymous';
+    },
+  });
 
   // Register Swagger documentation
-  // TODO: Uncomment when @fastify/swagger is installed
-  // await registerSwagger(app);
+  await registerSwagger(app);
 
   // Global middleware
   app.addHook('preHandler', metricsMiddleware);
+  app.addHook('onSend', metricsOnSendHook);
   app.setErrorHandler(errorHandler);
 
   // Health check
