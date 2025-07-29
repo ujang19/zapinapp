@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Title, Text, Button, Flex, Badge, TextInput, Select, SelectItem, Card } from "@tremor/react";
+import { Title, Text, Button, Flex, Badge, TextInput, Select, SelectItem } from "@tremor/react";
+import { Card } from "@/components/tremor/Card";
 import { Search, Plus, X } from "lucide-react";
 import { DataTable } from "./components/DataTable";
 import { getColumns } from "./components/Columns";

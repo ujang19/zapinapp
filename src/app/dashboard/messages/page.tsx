@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { Card, Badge, TabGroup, TabList, Tab, TabPanels, TabPanel } from "@tremor/react"
+import { Badge, TabGroup, TabList, Tab, TabPanels, TabPanel } from "@tremor/react"
+import { Card } from "@/components/tremor/Card"
 import { 
   Search, 
   Phone, 
